@@ -74,6 +74,7 @@
     <Compile Include="Managers\RemoteManager.cs" />
     <Compile Include="Models\AnalysisResultModel.cs" />
     <Compile Include="Models\BaseResponse.cs" />
+    <Compile Include="Models\MsMultiPartFormData.cs" />
     <Compile Include="Models\SafeDictionary.cs" />
     <Compile Include="Models\SingletonResponse.cs" />
     <Compile Include="Models\WorkerParam.cs" />

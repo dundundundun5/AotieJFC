@@ -253,44 +253,49 @@ namespace AlgorithmAcceptance
             RemoteManager.Instance.Init();
         }
 
-        private void analysis_image(string destPath, string imgPath, string fileName)
-        {
-            try
-            {
-                HttpWebRequest request = (HttpWebRequest)WebRequest.Create($"{CarriageNumberServiceEndPoint}/ocr");
-                FileStream fs = new FileStream(imgPath, FileMode.Open, FileAccess.Read);
-                Byte[] bytes = new Byte[10240];
-                request.Method = "POST";
-                request.Proxy = null;
-                request.ContentType = "application/octet-stream";
-                Stream dataStream = request.GetRequestStream();
-                int count = fs.Read(bytes, 0, 10240);
-                while (count != 0)
-                {
-                    dataStream.Write(bytes, 0, count);
-                    count = fs.Read(bytes, 0, 10240);
-                }
-                fs.Close();
-                dataStream.Close();
+		private void analysis_image(string destPath, string imgPath, string fileName)
+		{
+			try
+			{
+				HttpWebRequest request = (HttpWebRequest)WebRequest.Create($"{CarriageNumberServiceEndPoint}/ocr_process_image");
+				MsMultiPartFormData form = new MsMultiPartFormData();
+				FileStream fs = new FileStream(imgPath, FileMode.Open, FileAccess.Read);
+				Byte[] bytes = new Byte[fs.Length];
+				fs.Read(bytes, 0, (int)fs.Length);
+				fs.Close();
 
-                HttpWebResponse response = (HttpWebResponse)request.GetResponse();
-                Stream stream = response.GetResponseStream();
-                FileStream os = new FileStream(Path.Combine(destPath, fileName), FileMode.OpenOrCreate, FileAccess.Write);
-                byte[] buff = new byte[512];
-                int c = 0;
-                while ((c = stream.Read(buff, 0, 512)) > 0)
-                {
-                    os.Write(buff, 0, c);
-                }
-                os.Close();
-            }
-            catch (System.Exception ex)
-            {
-                append_log($"{DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")}: 文件{fileName}解析失败，Error: {ex.Message}{Environment.NewLine}");
-            }
-        }
+				// 添加文件
+				form.AddStreamFile("image", fileName, bytes);
+				form.PrepareFormData();
 
-        private void btnSelectPath_Click(object sender, EventArgs e)
+				request.Method = "POST";
+				request.ContentType = "multipart/form-data; boundary=" + form.Boundary;
+
+				Stream dataStream = request.GetRequestStream();
+				foreach (var b in form.GetFormData())
+				{
+					dataStream.WriteByte(b);
+				}
+				dataStream.Close();
+
+				HttpWebResponse response = (HttpWebResponse)request.GetResponse();
+				Stream stream = response.GetResponseStream();
+				FileStream os = new FileStream(Path.Combine(destPath, fileName), FileMode.OpenOrCreate, FileAccess.Write);
+				byte[] buff = new byte[512];
+				int c = 0;
+				while ((c = stream.Read(buff, 0, 512)) > 0)
+				{
+					os.Write(buff, 0, c);
+				}
+				os.Close();
+			}
+			catch (System.Exception ex)
+			{
+				append_log($"{DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")}: 文件{fileName}解析失败，Error: {ex.Message}{Environment.NewLine}");
+			}
+		}
+
+		private void btnSelectPath_Click(object sender, EventArgs e)
         {
             FolderBrowserDialog fb = new FolderBrowserDialog();
             fb.RootFolder = Environment.SpecialFolder.Desktop;
