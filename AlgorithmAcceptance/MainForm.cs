@@ -257,7 +257,7 @@ namespace AlgorithmAcceptance
 		{
 			try
 			{
-				HttpWebRequest request = (HttpWebRequest)WebRequest.Create($"{CarriageNumberServiceEndPoint}/ocr_process_image");
+				HttpWebRequest request = (HttpWebRequest)WebRequest.Create(CarriageNumberServiceEndPoint);
 				MsMultiPartFormData form = new MsMultiPartFormData();
 				FileStream fs = new FileStream(imgPath, FileMode.Open, FileAccess.Read);
 				Byte[] bytes = new Byte[fs.Length];
