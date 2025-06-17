@@ -1,14 +1,23 @@
 ﻿using AlgorithmAcceptance.Managers;
 using AlgorithmAcceptance.Models;
 using AlgorithmAcceptance.Utils;
+using Newtonsoft.Json;
+using SixLabors.ImageSharp.Drawing;
+using SixLabors.ImageSharp.PixelFormats;
+using SixLabors.ImageSharp.Processing;
+using SixLabors.ImageSharp.Drawing.Processing;
+using SixLabors.ImageSharp;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Configuration;
 using System.Drawing;
 using System.IO;
+using System.Linq;
 using System.Net;
 using System.Windows.Forms;
+using Path = System.IO.Path;
+using Image = System.Drawing.Image;
 
 namespace AlgorithmAcceptance
 {
@@ -265,7 +274,8 @@ namespace AlgorithmAcceptance
 				fs.Close();
 
 				// 添加文件
-				form.AddStreamFile("image", fileName, bytes);
+				form.AddStreamFile("image_file", fileName, bytes);
+                form.AddFormField("task_name", "BODY");
 				form.PrepareFormData();
 
 				request.Method = "POST";
@@ -279,15 +289,27 @@ namespace AlgorithmAcceptance
 				dataStream.Close();
 
 				HttpWebResponse response = (HttpWebResponse)request.GetResponse();
-				Stream stream = response.GetResponseStream();
-				FileStream os = new FileStream(Path.Combine(destPath, fileName), FileMode.OpenOrCreate, FileAccess.Write);
-				byte[] buff = new byte[512];
-				int c = 0;
-				while ((c = stream.Read(buff, 0, 512)) > 0)
-				{
-					os.Write(buff, 0, c);
+                var streamReader = new StreamReader(response.GetResponseStream());
+                var content = streamReader.ReadToEnd();
+                WarningDetectiveResponse result = JsonConvert.DeserializeObject<WarningDetectiveResponse>(content);
+				var currentImage = SixLabors.ImageSharp.Image.Load<Rgba32>(bytes);
+				if (result != null && result.Data.DefectList.Any()) {
+					foreach (var defect in result.Data.DefectList)
+					{
+						var x1 = (int)defect.TopLeft.X;
+						var x2 = (int)defect.BottomRight.X;
+						var y1 = (int)defect.TopLeft.Y;
+						var y2 = (int)defect.BottomRight.Y;
+						var rect = new RectangularPolygon(x1, y1, x2 - x1, y2 - y1);
+						var redPen = SixLabors.ImageSharp.Drawing.Processing.Pens.Solid(SixLabors.ImageSharp.Color.Red, 5); // 5px stroke width
+						currentImage.Mutate(x => x.Draw(redPen, rect));
+					}
 				}
-				os.Close();
+
+                currentImage.Save(Path.Combine(destPath, fileName));
+
+				streamReader.Close();
+				response.Close();
 			}
 			catch (System.Exception ex)
 			{
