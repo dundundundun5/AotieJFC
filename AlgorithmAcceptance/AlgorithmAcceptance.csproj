@@ -91,11 +91,18 @@
     <Compile Include="Logging\LogLevel.cs" />
     <Compile Include="Logging\OpFeedbackLogger.cs" />
     <Compile Include="Logging\OpFeedbackLoggerProvider.cs" />
-    <Compile Include="MainForm.cs">
+    <Compile Include="Models\TrainSegmentResponse.cs" />
+    <Compile Include="Segment.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="MainForm.Designer.cs">
-      <DependentUpon>MainForm.cs</DependentUpon>
+    <Compile Include="Segment.Designer.cs">
+      <DependentUpon>Segment.cs</DependentUpon>
+    </Compile>
+    <Compile Include="RiskDetect.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="RiskDetect.Designer.cs">
+      <DependentUpon>RiskDetect.cs</DependentUpon>
     </Compile>
     <Compile Include="Managers\LogManager.cs" />
     <Compile Include="Managers\RemoteManager.cs" />
@@ -111,8 +118,11 @@
     <Compile Include="Utils\ExceptionUtils.cs" />
     <Compile Include="Utils\HttpClient.cs" />
     <Compile Include="Utils\ImgUtils.cs" />
-    <EmbeddedResource Include="MainForm.resx">
-      <DependentUpon>MainForm.cs</DependentUpon>
+    <EmbeddedResource Include="Segment.resx">
+      <DependentUpon>Segment.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="RiskDetect.resx">
+      <DependentUpon>RiskDetect.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Properties\Resources.resx">
       <Generator>ResXFileCodeGenerator</Generator>

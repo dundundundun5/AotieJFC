@@ -21,15 +21,15 @@ using Image = System.Drawing.Image;
 
 namespace AlgorithmAcceptance
 {
-    public partial class MainForm : Form
+    public partial class RiskDetect : Form
     {
         private static List<string> imgArray = new List<string>();
         private static int imgIndex = 0;
         private static Image currentImage = null;
-        private static string CarriageNumberServiceEndPoint = ConfigurationManager.AppSettings["CarriageNumberServiceEndPoint"];
+        private static string RiskDetectServiceEndPoint = ConfigurationManager.AppSettings["RiskDetectServiceEndPoint"];
         private BackgroundWorker worker;
 
-        public MainForm()
+        public RiskDetect()
         {
             InitializeComponent();
         }
@@ -121,7 +121,7 @@ namespace AlgorithmAcceptance
         {
             var result = e.Result as WorkerParam;
             finish_analysis(result.DestPath, result.ErrorPath);
-            append_log($"{DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")}: 算法分析结束");
+            append_log($"{DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")}: 算法分析结束{Environment.NewLine}");
         }
 
         delegate void delAppendLog(string log);
@@ -181,7 +181,7 @@ namespace AlgorithmAcceptance
                 {
                     Directory.CreateDirectory(this.txtErrorDirectory.Text);
                 }
-                FileInfo file = new FileInfo(img);
+                FileInfo file = new FileInfo(Path.Combine(this.txtSourcePath.Text, fileName));
                 if (file.Exists)
                 {
                     file.CopyTo(Path.Combine(this.txtErrorDirectory.Text, fileName), true);
@@ -266,7 +266,7 @@ namespace AlgorithmAcceptance
 		{
 			try
 			{
-				HttpWebRequest request = (HttpWebRequest)WebRequest.Create(CarriageNumberServiceEndPoint);
+				HttpWebRequest request = (HttpWebRequest)WebRequest.Create(RiskDetectServiceEndPoint);
 				MsMultiPartFormData form = new MsMultiPartFormData();
 				FileStream fs = new FileStream(imgPath, FileMode.Open, FileAccess.Read);
 				Byte[] bytes = new Byte[fs.Length];
@@ -292,7 +292,7 @@ namespace AlgorithmAcceptance
                 var streamReader = new StreamReader(response.GetResponseStream());
                 var content = streamReader.ReadToEnd();
                 WarningDetectiveResponse result = JsonConvert.DeserializeObject<WarningDetectiveResponse>(content);
-				var currentImage = SixLabors.ImageSharp.Image.Load<Rgba32>(bytes);
+				var image = SixLabors.ImageSharp.Image.Load<Rgba32>(bytes);
 				if (result != null && result.Data.DefectList.Any()) {
 					foreach (var defect in result.Data.DefectList)
 					{
@@ -302,11 +302,11 @@ namespace AlgorithmAcceptance
 						var y2 = (int)defect.BottomRight.Y;
 						var rect = new RectangularPolygon(x1, y1, x2 - x1, y2 - y1);
 						var redPen = SixLabors.ImageSharp.Drawing.Processing.Pens.Solid(SixLabors.ImageSharp.Color.Red, 5); // 5px stroke width
-						currentImage.Mutate(x => x.Draw(redPen, rect));
+						image.Mutate(x => x.Draw(redPen, rect));
 					}
 				}
 
-                currentImage.Save(Path.Combine(destPath, fileName));
+				image.Save(Path.Combine(destPath, fileName));
 
 				streamReader.Close();
 				response.Close();
