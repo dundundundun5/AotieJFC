@@ -7,6 +7,7 @@ using SixLabors.ImageSharp.PixelFormats;
 using SixLabors.ImageSharp.Processing;
 using SixLabors.ImageSharp.Drawing.Processing;
 using SixLabors.ImageSharp;
+using SixLabors.Fonts;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -306,8 +307,13 @@ namespace AlgorithmAcceptance
 						var y1 = (int)defect.TopLeft.Y;
 						var y2 = (int)defect.BottomRight.Y;
 						var rect = new RectangularPolygon(x1, y1, x2 - x1, y2 - y1);
-						
+
 						image.Mutate(x => x.Draw(redPen, rect));
+						SixLabors.Fonts.FontFamily fontFamily = SixLabors.Fonts.SystemFonts.Families.FirstOrDefault();
+                        if (fontFamily != null) {
+							SixLabors.Fonts.Font font = fontFamily.CreateFont(100, SixLabors.Fonts.FontStyle.Bold);
+							image.Mutate(x => x.DrawText(y2.ToString(), font, SixLabors.ImageSharp.Color.Blue, new PointF(5, 5)));
+						}
 					}
                     if (result.Data.CenterX > 0) {
                         SixLabors.ImageSharp.PointF[] points = new PointF[2] { 
