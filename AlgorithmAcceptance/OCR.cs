@@ -300,7 +300,8 @@ namespace AlgorithmAcceptance
 				{
 					SixLabors.Fonts.FontFamily fontFamily = SixLabors.Fonts.SystemFonts.Families.FirstOrDefault();
 					SixLabors.Fonts.Font font = fontFamily.CreateFont(100, SixLabors.Fonts.FontStyle.Bold);
-					foreach (var defect in result.Data.DefectList)
+                    int count = 1;
+					foreach (var defect in result.Data.DefectList.OrderBy(d=> d.TopLeft.X))
 					{
 						var x1 = (int)defect.TopLeft.X;
 						var x2 = (int)defect.BottomRight.X;
@@ -313,10 +314,10 @@ namespace AlgorithmAcceptance
 						//绘制识别出的矩形框bottomRight的Y坐标
 						if (!string.IsNullOrEmpty(defect.DefectContent))
 						{
-
-							float xx = defect.BottomRight.X + 300 > result.Data.ImageWidth ? (float)defect.BottomRight.X - 150 : (float)defect.BottomRight.X + 150;
-							image.Mutate(x => x.DrawText(defect.DefectContent, font, SixLabors.ImageSharp.Color.Blue, new SixLabors.ImageSharp.PointF(xx, (float)defect.BottomRight.Y)));
+                            float xx = count == 1 ? (float)defect.TopLeft.X - 100 : (float)defect.BottomRight.X + 100;
+							image.Mutate(x => x.DrawText(defect.DefectContent, font, SixLabors.ImageSharp.Color.Blue, new SixLabors.ImageSharp.PointF(xx, (float)defect.TopLeft.Y - 150)));
 						}
+                        count++;
 					}
 				}
 
