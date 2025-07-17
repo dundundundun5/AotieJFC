@@ -31,8 +31,11 @@ namespace AlgorithmAcceptance
 
         public OCR()
         {
-            InitializeComponent();
-        }
+			InitializeComponent();
+			this.Width = 1350;
+			this.Height = 850;
+			this.Text = "OCR识别检测验收";
+		}
 
         private void btnStartAnalysis_Click(object sender, EventArgs e)
         {

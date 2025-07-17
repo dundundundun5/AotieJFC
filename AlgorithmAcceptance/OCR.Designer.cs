@@ -70,9 +70,9 @@
 			this.pnlMessages.Controls.Add(this.panel1);
 			this.pnlMessages.Dock = System.Windows.Forms.DockStyle.Right;
 			this.pnlMessages.Location = new System.Drawing.Point(1988, 0);
-			this.pnlMessages.Margin = new System.Windows.Forms.Padding(20, 20, 20, 20);
+			this.pnlMessages.Margin = new System.Windows.Forms.Padding(20);
 			this.pnlMessages.Name = "pnlMessages";
-			this.pnlMessages.Padding = new System.Windows.Forms.Padding(6, 6, 6, 6);
+			this.pnlMessages.Padding = new System.Windows.Forms.Padding(6);
 			this.pnlMessages.Size = new System.Drawing.Size(522, 1506);
 			this.pnlMessages.TabIndex = 0;
 			// 
@@ -82,7 +82,7 @@
 			this.panel2.Controls.Add(this.txtLogs);
 			this.panel2.Dock = System.Windows.Forms.DockStyle.Fill;
 			this.panel2.Location = new System.Drawing.Point(6, 56);
-			this.panel2.Margin = new System.Windows.Forms.Padding(6, 6, 6, 6);
+			this.panel2.Margin = new System.Windows.Forms.Padding(6);
 			this.panel2.Name = "panel2";
 			this.panel2.Size = new System.Drawing.Size(506, 1440);
 			this.panel2.TabIndex = 3;
@@ -91,7 +91,7 @@
 			// 
 			this.txtLogs.Dock = System.Windows.Forms.DockStyle.Fill;
 			this.txtLogs.Location = new System.Drawing.Point(0, 0);
-			this.txtLogs.Margin = new System.Windows.Forms.Padding(6, 6, 6, 6);
+			this.txtLogs.Margin = new System.Windows.Forms.Padding(6);
 			this.txtLogs.Multiline = true;
 			this.txtLogs.Name = "txtLogs";
 			this.txtLogs.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;
@@ -104,7 +104,7 @@
 			this.panel1.Controls.Add(this.label5);
 			this.panel1.Dock = System.Windows.Forms.DockStyle.Top;
 			this.panel1.Location = new System.Drawing.Point(6, 6);
-			this.panel1.Margin = new System.Windows.Forms.Padding(6, 6, 6, 6);
+			this.panel1.Margin = new System.Windows.Forms.Padding(6);
 			this.panel1.Name = "panel1";
 			this.panel1.Size = new System.Drawing.Size(506, 50);
 			this.panel1.TabIndex = 2;
@@ -143,7 +143,7 @@
 			this.pnlAlgorithmAnalysis.Controls.Add(this.label1);
 			this.pnlAlgorithmAnalysis.Dock = System.Windows.Forms.DockStyle.Top;
 			this.pnlAlgorithmAnalysis.Location = new System.Drawing.Point(0, 0);
-			this.pnlAlgorithmAnalysis.Margin = new System.Windows.Forms.Padding(6, 6, 6, 6);
+			this.pnlAlgorithmAnalysis.Margin = new System.Windows.Forms.Padding(6);
 			this.pnlAlgorithmAnalysis.Name = "pnlAlgorithmAnalysis";
 			this.pnlAlgorithmAnalysis.Padding = new System.Windows.Forms.Padding(0, 0, 20, 20);
 			this.pnlAlgorithmAnalysis.Size = new System.Drawing.Size(1988, 443);
@@ -224,7 +224,7 @@
 			// btnSelectPath
 			// 
 			this.btnSelectPath.Location = new System.Drawing.Point(956, 46);
-			this.btnSelectPath.Margin = new System.Windows.Forms.Padding(6, 6, 6, 6);
+			this.btnSelectPath.Margin = new System.Windows.Forms.Padding(6);
 			this.btnSelectPath.Name = "btnSelectPath";
 			this.btnSelectPath.Size = new System.Drawing.Size(150, 46);
 			this.btnSelectPath.TabIndex = 10;
@@ -235,7 +235,7 @@
 			// txtErrorDirectory
 			// 
 			this.txtErrorDirectory.Location = new System.Drawing.Point(224, 231);
-			this.txtErrorDirectory.Margin = new System.Windows.Forms.Padding(6, 6, 6, 6);
+			this.txtErrorDirectory.Margin = new System.Windows.Forms.Padding(6);
 			this.txtErrorDirectory.Name = "txtErrorDirectory";
 			this.txtErrorDirectory.ReadOnly = true;
 			this.txtErrorDirectory.Size = new System.Drawing.Size(1196, 35);
@@ -254,7 +254,7 @@
 			// btnMarkError
 			// 
 			this.btnMarkError.Location = new System.Drawing.Point(1716, 225);
-			this.btnMarkError.Margin = new System.Windows.Forms.Padding(6, 6, 6, 6);
+			this.btnMarkError.Margin = new System.Windows.Forms.Padding(6);
 			this.btnMarkError.Name = "btnMarkError";
 			this.btnMarkError.Size = new System.Drawing.Size(208, 46);
 			this.btnMarkError.TabIndex = 5;
@@ -265,7 +265,7 @@
 			// txtAnalysisResultDirectory
 			// 
 			this.txtAnalysisResultDirectory.Location = new System.Drawing.Point(226, 310);
-			this.txtAnalysisResultDirectory.Margin = new System.Windows.Forms.Padding(6, 6, 6, 6);
+			this.txtAnalysisResultDirectory.Margin = new System.Windows.Forms.Padding(6);
 			this.txtAnalysisResultDirectory.Name = "txtAnalysisResultDirectory";
 			this.txtAnalysisResultDirectory.ReadOnly = true;
 			this.txtAnalysisResultDirectory.Size = new System.Drawing.Size(1194, 35);
@@ -274,7 +274,7 @@
 			// btnNext
 			// 
 			this.btnNext.Location = new System.Drawing.Point(1716, 310);
-			this.btnNext.Margin = new System.Windows.Forms.Padding(6, 6, 6, 6);
+			this.btnNext.Margin = new System.Windows.Forms.Padding(6);
 			this.btnNext.Name = "btnNext";
 			this.btnNext.Size = new System.Drawing.Size(208, 46);
 			this.btnNext.TabIndex = 4;
@@ -286,7 +286,7 @@
 			// btnPre
 			// 
 			this.btnPre.Location = new System.Drawing.Point(1480, 310);
-			this.btnPre.Margin = new System.Windows.Forms.Padding(6, 6, 6, 6);
+			this.btnPre.Margin = new System.Windows.Forms.Padding(6);
 			this.btnPre.Name = "btnPre";
 			this.btnPre.Size = new System.Drawing.Size(188, 46);
 			this.btnPre.TabIndex = 3;
@@ -297,7 +297,7 @@
 			// btnStartAnalysis
 			// 
 			this.btnStartAnalysis.Location = new System.Drawing.Point(1716, 50);
-			this.btnStartAnalysis.Margin = new System.Windows.Forms.Padding(6, 6, 6, 6);
+			this.btnStartAnalysis.Margin = new System.Windows.Forms.Padding(6);
 			this.btnStartAnalysis.Name = "btnStartAnalysis";
 			this.btnStartAnalysis.Size = new System.Drawing.Size(208, 140);
 			this.btnStartAnalysis.TabIndex = 6;
@@ -318,7 +318,7 @@
 			// pbProcess
 			// 
 			this.pbProcess.Location = new System.Drawing.Point(226, 140);
-			this.pbProcess.Margin = new System.Windows.Forms.Padding(6, 6, 6, 6);
+			this.pbProcess.Margin = new System.Windows.Forms.Padding(6);
 			this.pbProcess.Name = "pbProcess";
 			this.pbProcess.Size = new System.Drawing.Size(1198, 46);
 			this.pbProcess.TabIndex = 2;
@@ -336,7 +336,7 @@
 			// txtSourcePath
 			// 
 			this.txtSourcePath.Location = new System.Drawing.Point(226, 48);
-			this.txtSourcePath.Margin = new System.Windows.Forms.Padding(6, 6, 6, 6);
+			this.txtSourcePath.Margin = new System.Windows.Forms.Padding(6);
 			this.txtSourcePath.Name = "txtSourcePath";
 			this.txtSourcePath.ReadOnly = true;
 			this.txtSourcePath.Size = new System.Drawing.Size(686, 35);
@@ -358,7 +358,7 @@
 			this.pnlAnalysisResult.Controls.Add(this.pbImgBox);
 			this.pnlAnalysisResult.Dock = System.Windows.Forms.DockStyle.Fill;
 			this.pnlAnalysisResult.Location = new System.Drawing.Point(0, 443);
-			this.pnlAnalysisResult.Margin = new System.Windows.Forms.Padding(6, 6, 6, 6);
+			this.pnlAnalysisResult.Margin = new System.Windows.Forms.Padding(6);
 			this.pnlAnalysisResult.Name = "pnlAnalysisResult";
 			this.pnlAnalysisResult.Size = new System.Drawing.Size(1988, 1063);
 			this.pnlAnalysisResult.TabIndex = 2;
@@ -382,7 +382,9 @@
 			this.Controls.Add(this.pnlAnalysisResult);
 			this.Controls.Add(this.pnlAlgorithmAnalysis);
 			this.Controls.Add(this.pnlMessages);
-			this.Margin = new System.Windows.Forms.Padding(6, 6, 6, 6);
+			this.Margin = new System.Windows.Forms.Padding(6);
+			this.MaximizeBox = false;
+			this.MinimizeBox = false;
 			this.Name = "OCR";
 			this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
 			this.Text = "算法验收";

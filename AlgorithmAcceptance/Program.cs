@@ -17,8 +17,8 @@ namespace AlgorithmAcceptance
 		{
 			Application.EnableVisualStyles();
 			Application.SetCompatibleTextRenderingDefault(false);
-			Application.Run(new Segment());
-			//Application.Run(new OCR());
+			//Application.Run(new Segment());
+			Application.Run(new OCR());
 			//Application.Run(new RiskDetect());
 
 		}
