@@ -91,7 +91,15 @@
     <Compile Include="Logging\LogLevel.cs" />
     <Compile Include="Logging\OpFeedbackLogger.cs" />
     <Compile Include="Logging\OpFeedbackLoggerProvider.cs" />
+    <Compile Include="Models\OcrDetectiveResponse.cs" />
+    <Compile Include="Models\SegmentDefectData.cs" />
     <Compile Include="Models\TrainSegmentResponse.cs" />
+    <Compile Include="OCR.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="OCR.Designer.cs">
+      <DependentUpon>OCR.cs</DependentUpon>
+    </Compile>
     <Compile Include="Segment.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -118,6 +126,9 @@
     <Compile Include="Utils\ExceptionUtils.cs" />
     <Compile Include="Utils\HttpClient.cs" />
     <Compile Include="Utils\ImgUtils.cs" />
+    <EmbeddedResource Include="OCR.resx">
+      <DependentUpon>OCR.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="Segment.resx">
       <DependentUpon>Segment.cs</DependentUpon>
     </EmbeddedResource>

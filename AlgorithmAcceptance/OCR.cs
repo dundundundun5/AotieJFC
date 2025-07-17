@@ -7,7 +7,6 @@ using SixLabors.ImageSharp.PixelFormats;
 using SixLabors.ImageSharp.Processing;
 using SixLabors.ImageSharp.Drawing.Processing;
 using SixLabors.ImageSharp;
-using SixLabors.Fonts;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -19,26 +18,21 @@ using System.Net;
 using System.Windows.Forms;
 using Path = System.IO.Path;
 using Image = System.Drawing.Image;
-using PointF = SixLabors.ImageSharp.PointF;
 
 namespace AlgorithmAcceptance
 {
-    public partial class Segment : Form
+    public partial class OCR : Form
     {
         private static List<string> imgArray = new List<string>();
         private static int imgIndex = 0;
         private static Image currentImage = null;
-        private static string SegmentServiceEndPoint = ConfigurationManager.AppSettings["SegmentServiceEndPoint"];
+        private static string OCRServiceEndPoint = ConfigurationManager.AppSettings["OCRServiceEndPoint"];
         private BackgroundWorker worker;
 
-        public Segment()
+        public OCR()
         {
             InitializeComponent();
-            this.Width = 1350;
-			this.Height = 850;
-            this.Text = "车身识别检测验收";
-            this.pnlMessages.Width = this.pnlMessages.Height / 2;
-		}
+        }
 
         private void btnStartAnalysis_Click(object sender, EventArgs e)
         {
@@ -179,22 +173,21 @@ namespace AlgorithmAcceptance
 
         private void btnMarkError_Click(object sender, EventArgs e)
         {
-			var img = imgArray[imgIndex];
-			var fileName = Path.GetFileName(img);
-			if (!Directory.Exists(this.txtErrorDirectory.Text))
-			{
-				Directory.CreateDirectory(this.txtErrorDirectory.Text);
-			}
-			FileInfo file = new FileInfo(Path.Combine(this.txtSourcePath.Text, fileName));
-			if (file.Exists)
-			{
-				file.CopyTo(Path.Combine(this.txtErrorDirectory.Text, fileName), true);
-				append_log($"{DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")}: 文件{fileName}已完成标记结果错误{Environment.NewLine}");
-			}
-			//if ((MessageBox.Show("确定要将图片移入错误结果目录？", "提示", MessageBoxButtons.OKCancel) == DialogResult.OK))
-   //         {
-                
-   //         }
+            if ((MessageBox.Show("确定要将图片移入错误结果目录？", "提示", MessageBoxButtons.OKCancel) == DialogResult.OK))
+            {
+                var img = imgArray[imgIndex];
+                var fileName = Path.GetFileName(img);
+                if (!Directory.Exists(this.txtErrorDirectory.Text))
+                {
+                    Directory.CreateDirectory(this.txtErrorDirectory.Text);
+                }
+                FileInfo file = new FileInfo(Path.Combine(this.txtSourcePath.Text, fileName));
+                if (file.Exists)
+                {
+                    file.CopyTo(Path.Combine(this.txtErrorDirectory.Text, fileName), true);
+                    append_log($"{DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")}: 文件{fileName}已完成标记结果错误{Environment.NewLine}");
+                }
+            }
         }
 
         private void initial_analysis()
@@ -273,7 +266,7 @@ namespace AlgorithmAcceptance
 		{
 			try
 			{
-				HttpWebRequest request = (HttpWebRequest)WebRequest.Create(SegmentServiceEndPoint);
+				HttpWebRequest request = (HttpWebRequest)WebRequest.Create(OCRServiceEndPoint);
 				MsMultiPartFormData form = new MsMultiPartFormData();
 				FileStream fs = new FileStream(imgPath, FileMode.Open, FileAccess.Read);
 				Byte[] bytes = new Byte[fs.Length];
@@ -282,6 +275,7 @@ namespace AlgorithmAcceptance
 
 				// 添加文件
 				form.AddStreamFile("image_file", fileName, bytes);
+                form.AddFormField("task_name", "BODY");
 				form.PrepareFormData();
 
 				request.Method = "POST";
@@ -297,11 +291,12 @@ namespace AlgorithmAcceptance
 				HttpWebResponse response = (HttpWebResponse)request.GetResponse();
                 var streamReader = new StreamReader(response.GetResponseStream());
                 var content = streamReader.ReadToEnd();
-				TrainSegmentResponse result = JsonConvert.DeserializeObject<TrainSegmentResponse>(content);
+				OcrDetectiveResponse result = JsonConvert.DeserializeObject<OcrDetectiveResponse>(content);
 				var image = SixLabors.ImageSharp.Image.Load<Rgba32>(bytes);
-				if (result != null && result.Data.DefectList.Any()) {
-					var redPen = SixLabors.ImageSharp.Drawing.Processing.Pens.Solid(SixLabors.ImageSharp.Color.Red, 5); // 5px stroke width
-                    //绘制识别出的矩形框
+				if (result != null && result.Data.DefectList.Any())
+				{
+					SixLabors.Fonts.FontFamily fontFamily = SixLabors.Fonts.SystemFonts.Families.FirstOrDefault();
+					SixLabors.Fonts.Font font = fontFamily.CreateFont(100, SixLabors.Fonts.FontStyle.Bold);
 					foreach (var defect in result.Data.DefectList)
 					{
 						var x1 = (int)defect.TopLeft.X;
@@ -309,26 +304,16 @@ namespace AlgorithmAcceptance
 						var y1 = (int)defect.TopLeft.Y;
 						var y2 = (int)defect.BottomRight.Y;
 						var rect = new RectangularPolygon(x1, y1, x2 - x1, y2 - y1);
-
+						var redPen = SixLabors.ImageSharp.Drawing.Processing.Pens.Solid(SixLabors.ImageSharp.Color.Red, 5); // 5px stroke width
 						image.Mutate(x => x.Draw(redPen, rect));
-					}
 
-                    //绘制识别出的矩形框bottomRight的Y坐标
-                    string y = string.Join(",", result.Data.DefectList.Select(d => (int)d.BottomRight.Y).ToArray());
-					SixLabors.Fonts.FontFamily fontFamily = SixLabors.Fonts.SystemFonts.Families.FirstOrDefault();
-					if (fontFamily != null)
-					{
-						SixLabors.Fonts.Font font = fontFamily.CreateFont(100, SixLabors.Fonts.FontStyle.Bold);
-						image.Mutate(x => x.DrawText(y.ToString(), font, SixLabors.ImageSharp.Color.Blue, new PointF(5, 5)));
-					}
+						//绘制识别出的矩形框bottomRight的Y坐标
+						if (!string.IsNullOrEmpty(defect.DefectContent))
+						{
 
-					//绘制centerX分割线
-					if (result.Data.CenterX > 0) {
-                        SixLabors.ImageSharp.PointF[] points = new PointF[2] { 
-                            new PointF(result.Data.CenterX, 0),
-							new PointF(result.Data.CenterX, image.Height)
-						};
-						image.Mutate(x => x.DrawLine(redPen, points));
+							float xx = defect.BottomRight.X + 300 > result.Data.ImageWidth ? (float)defect.BottomRight.X - 150 : (float)defect.BottomRight.X + 150;
+							image.Mutate(x => x.DrawText(defect.DefectContent, font, SixLabors.ImageSharp.Color.Blue, new SixLabors.ImageSharp.PointF(xx, (float)defect.BottomRight.Y)));
+						}
 					}
 				}
 
@@ -350,7 +335,7 @@ namespace AlgorithmAcceptance
             //设置默认根目录是桌面
             fb.Description = "请选择算法分析原图目录:";
             //设置对话框说明
-            if (fb.ShowDialog(new Form() { Width = 1000, Height = 800 }) == DialogResult.OK)
+            if (fb.ShowDialog() == DialogResult.OK)
             {
                 this.txtSourcePath.Text = fb.SelectedPath;
             }

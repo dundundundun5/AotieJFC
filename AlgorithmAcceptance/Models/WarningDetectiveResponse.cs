@@ -20,16 +20,7 @@ namespace AlgorithmAcceptance.Models
 		public int ImageHeight { get; set; }
 	}
 
-	public class SegmentDefectData {
-		public Point BottomRight { get; set; } = new Point();
-
-		public Point TopLeft { get; set; } = new Point();
-
-		public double DefectScore { get; set; }
-
-		public string DefectType { get; set; } = string.Empty;
-	}
-
+	
 	public class Point
 	{
 		public decimal X { get; set; }
