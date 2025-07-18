@@ -93,19 +93,19 @@ namespace AlgorithmAcceptance
                     append_log($"{DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")}: 开始处理文件{fileName}{Environment.NewLine}");
                     worker.ReportProgress((int)(Math.Round(Convert.ToDecimal(counter) / totalCount, 2) * 100));
                     counter++;
-                    analysis_image(param.DestPath, imgPath, fileName);
-                    // 看看获取到的图片是否正常，不正常的都移到error文件夹
-                    var fileFullName = Path.Combine(param.DestPath, fileName);
-                    try
-                    {
-                        var tmp = Image.FromFile(fileFullName);
-                    }
-                    catch 
-                    {
-                        move_file(fileFullName, param.ErrorPath);
-                    }
-                    
-                    append_log($"{DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")}: 文件{fileName}处理完成{Environment.NewLine}");
+                    if (analysis_image(param.DestPath, imgPath, fileName)) {
+						append_log($"{DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")}: 文件{fileName}处理完成{Environment.NewLine}");
+					}
+                    //// 看看获取到的图片是否正常，不正常的都移到error文件夹
+                    //var fileFullName = Path.Combine(param.DestPath, fileName);
+                    //try
+                    //{
+                    //    var tmp = Image.FromFile(fileFullName);
+                    //}
+                    //catch 
+                    //{
+                    //    move_file(fileFullName, param.ErrorPath);
+                    //}
                 }
                 e.Result = param;
             }
@@ -176,22 +176,19 @@ namespace AlgorithmAcceptance
 
         private void btnMarkError_Click(object sender, EventArgs e)
         {
-            if ((MessageBox.Show("确定要将图片移入错误结果目录？", "提示", MessageBoxButtons.OKCancel) == DialogResult.OK))
-            {
-                var img = imgArray[imgIndex];
-                var fileName = Path.GetFileName(img);
-                if (!Directory.Exists(this.txtErrorDirectory.Text))
-                {
-                    Directory.CreateDirectory(this.txtErrorDirectory.Text);
-                }
-                FileInfo file = new FileInfo(Path.Combine(this.txtSourcePath.Text, fileName));
-                if (file.Exists)
-                {
-                    file.CopyTo(Path.Combine(this.txtErrorDirectory.Text, fileName), true);
-                    append_log($"{DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")}: 文件{fileName}已完成标记结果错误{Environment.NewLine}");
-                }
-            }
-        }
+			var img = imgArray[imgIndex];
+			var fileName = Path.GetFileName(img);
+			if (!Directory.Exists(this.txtErrorDirectory.Text))
+			{
+				Directory.CreateDirectory(this.txtErrorDirectory.Text);
+			}
+			FileInfo file = new FileInfo(Path.Combine(this.txtSourcePath.Text, fileName));
+			if (file.Exists)
+			{
+				file.MoveTo(Path.Combine(this.txtErrorDirectory.Text, fileName));
+				append_log($"{DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")}: 文件{fileName}已完成标记结果错误{Environment.NewLine}");
+			}
+		}
 
         private void initial_analysis()
         {
@@ -265,7 +262,7 @@ namespace AlgorithmAcceptance
             RemoteManager.Instance.Init();
         }
 
-		private void analysis_image(string destPath, string imgPath, string fileName)
+		private bool analysis_image(string destPath, string imgPath, string fileName)
 		{
 			try
 			{
@@ -321,14 +318,15 @@ namespace AlgorithmAcceptance
 					}
 				}
 
-				image.Save(Path.Combine(destPath, fileName));
-
 				streamReader.Close();
 				response.Close();
+				image.Save(Path.Combine(destPath, fileName));
+                return true;
 			}
 			catch (System.Exception ex)
 			{
 				append_log($"{DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")}: 文件{fileName}解析失败，Error: {ex.Message}{Environment.NewLine}");
+                return false;
 			}
 		}
 
