@@ -33,11 +33,11 @@ namespace AlgorithmAcceptance
 
         public Segment()
         {
-            InitializeComponent();
-            this.Width = 1350;
-			this.Height = 850;
-            this.Text = "车身识别检测验收";
-            this.pnlMessages.Width = this.pnlMessages.Height / 2;
+			InitializeComponent();
+			this.Width = 1350;
+			this.Height = 900;
+			this.Text = "车身识别检测验收";
+			//this.pnlMessages.Width = this.pnlMessages.Height / 2;
 		}
 
         private void btnStartAnalysis_Click(object sender, EventArgs e)
@@ -96,19 +96,10 @@ namespace AlgorithmAcceptance
                     append_log($"{DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")}: 开始处理文件{fileName}{Environment.NewLine}");
                     worker.ReportProgress((int)(Math.Round(Convert.ToDecimal(counter) / totalCount, 2) * 100));
                     counter++;
-                    analysis_image(param.DestPath, imgPath, fileName);
-                    // 看看获取到的图片是否正常，不正常的都移到error文件夹
-                    var fileFullName = Path.Combine(param.DestPath, fileName);
-                    try
+                    if (analysis_image(param.DestPath, imgPath, fileName))
                     {
-                        var tmp = Image.FromFile(fileFullName);
+                        append_log($"{DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")}: 文件{fileName}处理完成{Environment.NewLine}");
                     }
-                    catch 
-                    {
-                        move_file(fileFullName, param.ErrorPath);
-                    }
-                    
-                    append_log($"{DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")}: 文件{fileName}处理完成{Environment.NewLine}");
                 }
                 e.Result = param;
             }
@@ -191,10 +182,6 @@ namespace AlgorithmAcceptance
 				file.CopyTo(Path.Combine(this.txtErrorDirectory.Text, fileName), true);
 				append_log($"{DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")}: 文件{fileName}已完成标记结果错误{Environment.NewLine}");
 			}
-			//if ((MessageBox.Show("确定要将图片移入错误结果目录？", "提示", MessageBoxButtons.OKCancel) == DialogResult.OK))
-   //         {
-                
-   //         }
         }
 
         private void initial_analysis()
@@ -269,7 +256,7 @@ namespace AlgorithmAcceptance
             RemoteManager.Instance.Init();
         }
 
-		private void analysis_image(string destPath, string imgPath, string fileName)
+		private bool analysis_image(string destPath, string imgPath, string fileName)
 		{
 			try
 			{
@@ -336,24 +323,27 @@ namespace AlgorithmAcceptance
 
 				streamReader.Close();
 				response.Close();
+                return true;
 			}
 			catch (System.Exception ex)
 			{
 				append_log($"{DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")}: 文件{fileName}解析失败，Error: {ex.Message}{Environment.NewLine}");
+                return false;
 			}
 		}
 
 		private void btnSelectPath_Click(object sender, EventArgs e)
         {
-            FolderBrowserDialog fb = new FolderBrowserDialog();
-            fb.RootFolder = Environment.SpecialFolder.Desktop;
-            //设置默认根目录是桌面
-            fb.Description = "请选择算法分析原图目录:";
-            //设置对话框说明
-            if (fb.ShowDialog(new Form() { Width = 1000, Height = 800 }) == DialogResult.OK)
-            {
-                this.txtSourcePath.Text = fb.SelectedPath;
-            }
+            using (FolderBrowserDialog fb = new FolderBrowserDialog()) {
+				fb.RootFolder = Environment.SpecialFolder.Desktop;
+				//设置默认根目录是桌面
+				fb.Description = "请选择算法分析原图目录:";
+				//设置对话框说明
+				if (fb.ShowDialog(new Form() { Height = 500 }) == DialogResult.OK)
+				{
+					this.txtSourcePath.Text = fb.SelectedPath;
+				}
+			}
         }
     }
 }

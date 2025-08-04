@@ -94,6 +94,12 @@
     <Compile Include="Models\OcrDetectiveResponse.cs" />
     <Compile Include="Models\SegmentDefectData.cs" />
     <Compile Include="Models\TrainSegmentResponse.cs" />
+    <Compile Include="OCR_New.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="OCR_New.Designer.cs">
+      <DependentUpon>OCR_New.cs</DependentUpon>
+    </Compile>
     <Compile Include="OCR.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -126,6 +132,9 @@
     <Compile Include="Utils\ExceptionUtils.cs" />
     <Compile Include="Utils\HttpClient.cs" />
     <Compile Include="Utils\ImgUtils.cs" />
+    <EmbeddedResource Include="OCR_New.resx">
+      <DependentUpon>OCR_New.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="OCR.resx">
       <DependentUpon>OCR.cs</DependentUpon>
     </EmbeddedResource>

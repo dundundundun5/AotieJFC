@@ -53,6 +53,7 @@
 			this.txtSourcePath = new System.Windows.Forms.TextBox();
 			this.label1 = new System.Windows.Forms.Label();
 			this.pnlAnalysisResult = new System.Windows.Forms.Panel();
+			this.folderBrowserDialog1 = new System.Windows.Forms.FolderBrowserDialog();
 			this.pnlMessages.SuspendLayout();
 			this.panel2.SuspendLayout();
 			((System.ComponentModel.ISupportInitialize)(this.pbImgBox)).BeginInit();
@@ -401,6 +402,7 @@
 		private System.Windows.Forms.Label label8;
 		private System.Windows.Forms.Label label7;
 		private System.Windows.Forms.Label label3;
+		private System.Windows.Forms.FolderBrowserDialog folderBrowserDialog1;
 	}
 }
 
