@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel;
 
-namespace AlgorithmAcceptance.Logging
+namespace AlgorithmAcceptanceTool.Logging
 {
     public enum LogLevel
     {

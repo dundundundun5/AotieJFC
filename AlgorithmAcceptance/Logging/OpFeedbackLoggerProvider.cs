@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace AlgorithmAcceptance.Logging
+namespace AlgorithmAcceptanceTool.Logging
 {
     public class OpFeedbackLoggerProvider : ILoggerProvider
     {
@@ -12,9 +12,7 @@ namespace AlgorithmAcceptance.Logging
         public OpFeedbackLoggerProvider(System.Windows.Forms.ListView listView,LogLevel minimumLevel = LogLevel.Info)
         {
             if (minimumLevel < LogLevel.Trace || minimumLevel > LogLevel.OpFatal)
-            {
                 throw new ArgumentOutOfRangeException(nameof(minimumLevel), "minimumLevel must be between Trace and OpFatal");
-            }
             _logger = new OpFeedbackLogger(listView, minimumLevel);
         }
         public ILogger CreateLogger(string name)

@@ -1,7 +1,7 @@
-﻿using AlgorithmAcceptance.Models;
+﻿using AlgorithmAcceptanceTool.Models;
 using System;
 
-namespace AlgorithmAcceptance.Logging
+namespace AlgorithmAcceptanceTool.Logging
 {
 
     public class FileLoggerProvider : ILoggerProvider
@@ -12,9 +12,7 @@ namespace AlgorithmAcceptance.Logging
         public FileLoggerProvider(LogLevel minimumLevel = LogLevel.Info)
         {
             if (minimumLevel < LogLevel.Trace || minimumLevel > LogLevel.OpFatal)
-            {
                 throw new ArgumentOutOfRangeException(nameof(minimumLevel), "minimumLevel must be between Trace and OpFatal");
-            }
 
             _minimumLevel = minimumLevel;
         }

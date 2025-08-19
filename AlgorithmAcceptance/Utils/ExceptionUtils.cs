@@ -2,16 +2,14 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace AlgorithmAcceptance.Utils
+namespace AlgorithmAcceptanceTool.Utils
 {
     public static class ExceptionUtils
     {
         public static string GetDetailMessage(this Exception ex)
         {
             if (ex == null || string.IsNullOrEmpty(ex.Message))
-            {
                 return string.Empty;
-            }
             var builder = new StringBuilder(ex.Message);
             ICollection<Exception> causes = new LinkedList<Exception>();
 

@@ -2,11 +2,11 @@
 using Newtonsoft.Json;
 using System.Collections.Generic;
 using System.Configuration;
-using AlgorithmAcceptance.Logging;
-using AlgorithmAcceptance.Models;
-using AlgorithmAcceptance.Utils;
+using AlgorithmAcceptanceTool.Models;
+using AlgorithmAcceptanceTool.Utils;
+using AlgorithmAcceptanceTool.Logging;
 
-namespace AlgorithmAcceptance.Managers
+namespace AlgorithmAcceptanceTool.Managers
 {
     public class RemoteManager
     {
@@ -25,9 +25,7 @@ namespace AlgorithmAcceptance.Managers
             get
             {
                 if (_instance == null)
-                {
                     _instance = new RemoteManager();
-                }
                 return _instance;
             }
         }
@@ -55,7 +53,7 @@ namespace AlgorithmAcceptance.Managers
                     ? new Tuple<string, byte[]>(string.Empty, result.Data.AnalysisResult)
                     : new Tuple<string, byte[]>(result.ResultMessage, null);
             }
-            catch (System.Exception ex)
+            catch (Exception ex)
             {
                 return new Tuple<string, byte[]>(ex.Message, null);
             }

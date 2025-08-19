@@ -1,4 +1,4 @@
-﻿namespace AlgorithmAcceptance.Logging
+﻿namespace AlgorithmAcceptanceTool.Logging
 {
     public interface ILoggerProvider
     {

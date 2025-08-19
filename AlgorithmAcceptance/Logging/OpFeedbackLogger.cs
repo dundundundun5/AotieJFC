@@ -3,14 +3,14 @@ using System.Drawing;
 using System.Windows.Forms;
 using static System.Windows.Forms.ListViewItem;
 
-namespace AlgorithmAcceptance.Logging
+namespace AlgorithmAcceptanceTool.Logging
 {
     class OpFeedbackLogger : ILogger
     {
         private readonly LogLevel _minimumLevel;
-        private readonly System.Windows.Forms.ListView _listView;
+        private readonly ListView _listView;
 
-        public OpFeedbackLogger(System.Windows.Forms.ListView listView, LogLevel minimumLevel)
+        public OpFeedbackLogger(ListView listView, LogLevel minimumLevel)
         {
             //_listView = listView ?? throw new Exception("必须提供操作日志显示控件");
             _minimumLevel = minimumLevel;
@@ -28,18 +28,14 @@ namespace AlgorithmAcceptance.Logging
         public void Log(LogLevel level, string message)
         {
             if (!IsEnabled(level))
-            {
                 return;
-            }
             AppendLog(message, level);
         }
 
         public void Log(LogLevel level, string message, Exception exception)
         {
             if (!IsEnabled(level))
-            {
                 return;
-            }
             AppendLog(message, level);
         }
 
@@ -58,13 +54,9 @@ namespace AlgorithmAcceptance.Logging
             _listView.BeginInvoke((MethodInvoker)delegate
             {
                 if (!_listView.IsHandleCreated)
-                {
                     return;
-                }
                 if (_listView.IsDisposed)
-                {
                     return;
-                }
                 AppendLogItem(log, level);
             });
         }
@@ -101,26 +93,18 @@ namespace AlgorithmAcceptance.Logging
         private string GetLogLevelTag(LogLevel level)
         {
             if(level>= LogLevel.Error)
-            {
                 return "错误";
-            }
             if (level >= LogLevel.Warn)
-            {
                 return "警告";
-            }
             return "信息";
         }
 
         private Color GetLogLevelColor(LogLevel level)
         {
             if(level>=LogLevel.Error)
-            {
                 return Color.Red;
-            }
             if (level >= LogLevel.Warn)
-            {
                 return Color.RosyBrown;
-            }
             return Color.Empty;
         }
     }
