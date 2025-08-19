@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace AlgorithmAcceptance.Models
+namespace AlgorithmAcceptanceTool.Models
 {
 	public class SegmentDefectData
 	{
@@ -16,6 +16,8 @@ namespace AlgorithmAcceptance.Models
 
 		public string DefectType { get; set; } = string.Empty;
 
-		public string DefectContent { get; set; } = string.Empty; 
-	}
+		public string DefectContent { get; set; } = string.Empty;
+
+        public int DefectValue { get; set; } = 0;
+    }
 }

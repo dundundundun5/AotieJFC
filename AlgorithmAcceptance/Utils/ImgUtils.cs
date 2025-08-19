@@ -5,7 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace AlgorithmAcceptance.Utils
+namespace AlgorithmAcceptanceTool.Utils
 {
     public static class ImgUtils
     {

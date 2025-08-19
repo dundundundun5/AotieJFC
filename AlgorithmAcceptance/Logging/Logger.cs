@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace AlgorithmAcceptance.Logging
+namespace AlgorithmAcceptanceTool.Logging
 {
     class Logger : ILogger
     {
@@ -14,9 +14,7 @@ namespace AlgorithmAcceptance.Logging
             foreach (var item in Loggers)
             {
                 if (!item.IsEnabled(level))
-                {
                     continue;
-                }
                 try
                 {
                     item.Log(level, message);
@@ -31,15 +29,11 @@ namespace AlgorithmAcceptance.Logging
         public void Log(LogLevel level, string message, Exception exception)
         {
             if (!IsEnabled(level))
-            {
                 return;
-            }
             foreach (var item in Loggers)
             {
                 if (!item.IsEnabled(level))
-                {
                     continue;
-                }
                 try
                 {
                     item.Log(level, message, exception);

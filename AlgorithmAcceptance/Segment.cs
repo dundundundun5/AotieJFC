@@ -1,45 +1,83 @@
-﻿using AlgorithmAcceptance.Managers;
-using AlgorithmAcceptance.Models;
-using AlgorithmAcceptance.Utils;
-using Newtonsoft.Json;
-using SixLabors.ImageSharp.Drawing;
-using SixLabors.ImageSharp.PixelFormats;
-using SixLabors.ImageSharp.Processing;
-using SixLabors.ImageSharp.Drawing.Processing;
-using SixLabors.ImageSharp;
-using SixLabors.Fonts;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Configuration;
-using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Net;
 using System.Windows.Forms;
-using Path = System.IO.Path;
+using AlgorithmAcceptanceTool.Managers;
+using AlgorithmAcceptanceTool.Models;
+using AlgorithmAcceptanceTool.Utils;
+using Newtonsoft.Json;
+using SixLabors.ImageSharp;
+using SixLabors.ImageSharp.Drawing;
+using SixLabors.ImageSharp.Drawing.Processing;
+using SixLabors.ImageSharp.PixelFormats;
+using SixLabors.ImageSharp.Processing;
 using Image = System.Drawing.Image;
+using Path = System.IO.Path;
 using PointF = SixLabors.ImageSharp.PointF;
 
-namespace AlgorithmAcceptance
+namespace AlgorithmAcceptanceTool
 {
     public partial class Segment : Form
     {
-        private static List<string> imgArray = new List<string>();
-        private static int imgIndex = 0;
-        private static Image currentImage = null;
-        private static string SegmentServiceEndPoint = ConfigurationManager.AppSettings["SegmentServiceEndPoint"];
-        private BackgroundWorker worker;
+        private List<string> imgArray = new List<string>();
+        private int imgIndex = 0;
+        private Image currentImage = null;
+        private string ServiceEndPoint = ConfigurationManager.AppSettings["SegmentServiceEndPoint"];
 
+        private string ErrorFolder = "error", ResultFolder = "result", ErrorWithDrawingFolder = "errorWithDrawing";
+        private BackgroundWorker worker;
+        private (string, string) StationNApi { get; set; } 
         public Segment()
         {
-			InitializeComponent();
-			this.Width = 1350;
-			this.Height = 900;
-			this.Text = "车身识别检测验收";
-			//this.pnlMessages.Width = this.pnlMessages.Height / 2;
-		}
+            InitializeComponent();
+            
+            StationNApi = CheckPresentStation.PresentStationAlgorithmApi();
+            if (StationNApi.Item1 is not null)
+            {
+                ServiceEndPoint = ServiceEndPoint.Replace(CheckPresentStation.LocalApi, StationNApi.Item2);
+                append_log($"- 检测到当前站点为{StationNApi.Item1}, 已将算法接口更换为{StationNApi.Item2}{Environment.NewLine}");
+                this.txtSourcePath.Text = Path.Join(@"D:\", $"{StationNApi.Item1}", "short_software");
+            }
+            else
+            {
+                append_log($"- 算法接口默认为18.23{Environment.NewLine}");
+            }
+            this.StartPosition = FormStartPosition.CenterScreen;
+            this.Width = 1500;
+            this.Height = 650;
+            this.Text = "车身识别检测算法验收";
+            //this.pnlMessages.Width = this.pnlMessages.Height / 2;
+        }
+        protected override bool ProcessCmdKey(ref Message msg, Keys keyData)
+        {
+            if (keyData == Keys.Right || keyData == Keys.Down)
+            {
+                btnNext.PerformClick();
+                return true;
+            }
+            if (keyData == Keys.Left || keyData == Keys.Up)
+            {
+                btnPre.PerformClick();
+                return true;
+            }
 
+            if (keyData == Keys.Enter)
+            {
+                btnMarkError.PerformClick();
+                return true;
+            }
+
+            if (keyData == Keys.Escape)
+            {
+                this.Close();
+            }
+
+            return base.ProcessCmdKey(ref msg, keyData);
+        }
         private void btnStartAnalysis_Click(object sender, EventArgs e)
         {
             var sourcePath = this.txtSourcePath.Text;
@@ -62,8 +100,9 @@ namespace AlgorithmAcceptance
         private void anylysis(string sourcePath)
         {
             append_log($"{DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")}: 算法分析开始{Environment.NewLine}");
-            var destPath = $"{sourcePath}\\result";
-            var errorPath = $"{sourcePath}\\error";
+            var destPath = $"{sourcePath}\\{ResultFolder}";
+            var errorPath = $"{sourcePath}\\{ErrorFolder}";
+            var errorWithLaeblPath = $"{sourcePath}\\{ErrorWithDrawingFolder}";
             if (Directory.Exists(destPath))
             {
                 Directory.Delete(destPath, true);
@@ -72,14 +111,20 @@ namespace AlgorithmAcceptance
             {
                 Directory.Delete(errorPath, true);
             }
+            if (Directory.Exists(errorWithLaeblPath))
+            {
+                Directory.Delete(errorWithLaeblPath, true);
+            }
             Directory.CreateDirectory(destPath);
             worker = new BackgroundWorker();
             worker.WorkerReportsProgress = true;
-            worker.RunWorkerCompleted += new RunWorkerCompletedEventHandler(worker_completed);
-            worker.DoWork += new DoWorkEventHandler(do_worker);
-            worker.ProgressChanged += new ProgressChangedEventHandler(worker_progess_changed);
+            worker.RunWorkerCompleted += worker_completed;
+            worker.DoWork += do_worker;
+            worker.ProgressChanged += worker_progess_changed;
             worker.RunWorkerAsync(new WorkerParam()
             { DestPath = destPath, SourcePath = sourcePath, ErrorPath = errorPath });
+           
+            
         }
 
         private void do_worker(object sender, DoWorkEventArgs e)
@@ -93,12 +138,17 @@ namespace AlgorithmAcceptance
                 foreach (var imgPath in imgArrayList)
                 {
                     var fileName = Path.GetFileName(imgPath);
-                    append_log($"{DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")}: 开始处理文件{fileName}{Environment.NewLine}");
+                    // append_log($"{DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")}: 开始处理文件{fileName}{Environment.NewLine}");
                     worker.ReportProgress((int)(Math.Round(Convert.ToDecimal(counter) / totalCount, 2) * 100));
                     counter++;
-                    if (analysis_image(param.DestPath, imgPath, fileName))
+                    try
                     {
-                        append_log($"{DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")}: 文件{fileName}处理完成{Environment.NewLine}");
+                        analysis_image(param.DestPath, imgPath, fileName);
+                        append_log($"- {fileName}处理完成 \u2713 {Environment.NewLine}");
+                    }
+                    catch (System.Exception ex)
+                    {
+                        append_log($"- {fileName}解析失败，Error: {ex.Message} \u2717{Environment.NewLine}");
                     }
                 }
                 e.Result = param;
@@ -141,7 +191,6 @@ namespace AlgorithmAcceptance
             {
                 Directory.CreateDirectory(destPath);
             }
-
             FileInfo file = new FileInfo(source);
             file.MoveTo(Path.Combine(destPath, file.Name));
         }
@@ -170,18 +219,25 @@ namespace AlgorithmAcceptance
 
         private void btnMarkError_Click(object sender, EventArgs e)
         {
-			var img = imgArray[imgIndex];
-			var fileName = Path.GetFileName(img);
-			if (!Directory.Exists(this.txtErrorDirectory.Text))
-			{
-				Directory.CreateDirectory(this.txtErrorDirectory.Text);
-			}
-			FileInfo file = new FileInfo(Path.Combine(this.txtSourcePath.Text, fileName));
-			if (file.Exists)
-			{
-				file.CopyTo(Path.Combine(this.txtErrorDirectory.Text, fileName), true);
-				append_log($"{DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")}: 文件{fileName}已完成标记结果错误{Environment.NewLine}");
-			}
+            var img = imgArray[imgIndex];
+            var fileName = Path.GetFileName(img);
+
+            if (!Directory.Exists(this.txtErrorDirectory.Text))
+            {
+                Directory.CreateDirectory(this.txtErrorDirectory.Text);
+            }
+            if (!Directory.Exists(Path.Combine(txtSourcePath.Text, ErrorWithDrawingFolder)))
+            {
+                Directory.CreateDirectory(Path.Combine(txtSourcePath.Text, ErrorWithDrawingFolder));
+            }
+            FileInfo file = new FileInfo(Path.Combine(this.txtSourcePath.Text, fileName));
+            FileInfo fileWithLabel = new FileInfo(Path.Combine(this.txtSourcePath.Text, ResultFolder, fileName));
+            if (file.Exists)
+            {
+                file.CopyTo(Path.Combine(this.txtErrorDirectory.Text, fileName), true);
+                fileWithLabel.CopyTo(Path.Combine(txtSourcePath.Text, ErrorWithDrawingFolder, fileName), true);
+                append_log($"{DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")}: 文件{fileName}已完成标记结果错误{Environment.NewLine}");
+            }
         }
 
         private void initial_analysis()
@@ -230,6 +286,8 @@ namespace AlgorithmAcceptance
 
             this.btnPre.Enabled = imgIndex > 0;
             this.btnNext.Enabled = imgIndex != imgArray.Count - 1;
+
+            
         }
 
         private void switch_image(int index)
@@ -256,94 +314,116 @@ namespace AlgorithmAcceptance
             RemoteManager.Instance.Init();
         }
 
-		private bool analysis_image(string destPath, string imgPath, string fileName)
-		{
-			try
-			{
-				HttpWebRequest request = (HttpWebRequest)WebRequest.Create(SegmentServiceEndPoint);
-				MsMultiPartFormData form = new MsMultiPartFormData();
-				FileStream fs = new FileStream(imgPath, FileMode.Open, FileAccess.Read);
-				Byte[] bytes = new Byte[fs.Length];
-				fs.Read(bytes, 0, (int)fs.Length);
-				fs.Close();
+        private bool analysis_image(string destPath, string imgPath, string fileName)
+        {
+            try
+            {
+                HttpWebRequest request = (HttpWebRequest)WebRequest.Create(ServiceEndPoint);
+                MsMultiPartFormData form = new MsMultiPartFormData();
+                FileStream fs = new FileStream(imgPath, FileMode.Open, FileAccess.Read);
+                Byte[] bytes = new Byte[fs.Length];
+                fs.Read(bytes, 0, (int)fs.Length);
+                fs.Close();
 
-				// 添加文件
-				form.AddStreamFile("image_file", fileName, bytes);
-				form.PrepareFormData();
+                // 添加文件
+                form.AddStreamFile("image_file", fileName, bytes);
+                form.PrepareFormData();
 
-				request.Method = "POST";
-				request.ContentType = "multipart/form-data; boundary=" + form.Boundary;
+                request.Method = "POST";
+                request.ContentType = "multipart/form-data; boundary=" + form.Boundary;
 
-				Stream dataStream = request.GetRequestStream();
-				foreach (var b in form.GetFormData())
-				{
-					dataStream.WriteByte(b);
-				}
-				dataStream.Close();
+                Stream dataStream = request.GetRequestStream();
+                foreach (var b in form.GetFormData())
+                {
+                    dataStream.WriteByte(b);
+                }
+                dataStream.Close();
 
-				HttpWebResponse response = (HttpWebResponse)request.GetResponse();
+                HttpWebResponse response = (HttpWebResponse)request.GetResponse();
                 var streamReader = new StreamReader(response.GetResponseStream());
                 var content = streamReader.ReadToEnd();
-				TrainSegmentResponse result = JsonConvert.DeserializeObject<TrainSegmentResponse>(content);
-				var image = SixLabors.ImageSharp.Image.Load<Rgba32>(bytes);
-				if (result != null && result.Data.DefectList.Any()) {
-					var redPen = SixLabors.ImageSharp.Drawing.Processing.Pens.Solid(SixLabors.ImageSharp.Color.Red, 5); // 5px stroke width
-                    //绘制识别出的矩形框
-					foreach (var defect in result.Data.DefectList)
-					{
-						var x1 = (int)defect.TopLeft.X;
-						var x2 = (int)defect.BottomRight.X;
-						var y1 = (int)defect.TopLeft.Y;
-						var y2 = (int)defect.BottomRight.Y;
-						var rect = new RectangularPolygon(x1, y1, x2 - x1, y2 - y1);
+                TrainSegmentResponse result = JsonConvert.DeserializeObject<TrainSegmentResponse>(content);
+                var image = SixLabors.ImageSharp.Image.Load<Rgba32>(bytes);
+                if (result != null && result.Data.DefectList.Any())
+                {
+                    var redPen = SixLabors.ImageSharp.Drawing.Processing.Pens.Solid(SixLabors.ImageSharp.Color.Red, 5); // 5px stroke width
+                                                                                                                        //绘制识别出的矩形框
+                    foreach (var defect in result.Data.DefectList)
+                    {
+                        var x1 = (int)defect.TopLeft.X;
+                        var x2 = (int)defect.BottomRight.X;
+                        var y1 = (int)defect.TopLeft.Y;
+                        var y2 = (int)defect.BottomRight.Y;
+                        var rect = new RectangularPolygon(x1, y1, x2 - x1, y2 - y1);
 
-						image.Mutate(x => x.Draw(redPen, rect));
-					}
+                        image.Mutate(x => x.Draw(redPen, rect));
+                    }
 
                     //绘制识别出的矩形框bottomRight的Y坐标
                     string y = string.Join(",", result.Data.DefectList.Select(d => (int)d.BottomRight.Y).ToArray());
-					SixLabors.Fonts.FontFamily fontFamily = SixLabors.Fonts.SystemFonts.Families.FirstOrDefault();
-					if (fontFamily != null)
-					{
-						SixLabors.Fonts.Font font = fontFamily.CreateFont(100, SixLabors.Fonts.FontStyle.Bold);
-						image.Mutate(x => x.DrawText(y.ToString(), font, SixLabors.ImageSharp.Color.Blue, new PointF(5, 5)));
-					}
+                    SixLabors.Fonts.FontFamily fontFamily = SixLabors.Fonts.SystemFonts.Families.FirstOrDefault();
+                    if (fontFamily != null)
+                    {
+                        SixLabors.Fonts.Font font = fontFamily.CreateFont(100, SixLabors.Fonts.FontStyle.Bold);
+                        image.Mutate(x => x.DrawText(y.ToString(), font, SixLabors.ImageSharp.Color.GreenYellow, new PointF(5, 5)));
+                    }
 
-					//绘制centerX分割线
-					if (result.Data.CenterX > 0) {
-                        SixLabors.ImageSharp.PointF[] points = new PointF[2] { 
+                    //绘制centerX分割线
+                    if (result.Data.CenterX > 0)
+                    {
+                        SixLabors.ImageSharp.PointF[] points = new PointF[2] {
                             new PointF(result.Data.CenterX, 0),
-							new PointF(result.Data.CenterX, image.Height)
-						};
-						image.Mutate(x => x.DrawLine(redPen, points));
-					}
-				}
+                            new PointF(result.Data.CenterX, image.Height)
+                        };
+                        image.Mutate(x => x.DrawLine(redPen, points));
+                    }
+                }
 
-				image.Save(Path.Combine(destPath, fileName));
+                image.Save(Path.Combine(destPath, fileName));
 
-				streamReader.Close();
-				response.Close();
+                streamReader.Close();
+                response.Close();
                 return true;
-			}
-			catch (System.Exception ex)
-			{
-				append_log($"{DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")}: 文件{fileName}解析失败，Error: {ex.Message}{Environment.NewLine}");
+            }
+            catch (System.Exception ex)
+            {
+                append_log($"{DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")}: 文件{fileName}解析失败，Error: {ex.Message}{Environment.NewLine}");
                 return false;
-			}
-		}
+            }
+        }
 
-		private void btnSelectPath_Click(object sender, EventArgs e)
+        private void btnSelectPath_Click(object sender, EventArgs e)
         {
-            using (FolderBrowserDialog fb = new FolderBrowserDialog()) {
-				fb.RootFolder = Environment.SpecialFolder.Desktop;
-				//设置默认根目录是桌面
-				fb.Description = "请选择算法分析原图目录:";
-				//设置对话框说明
-				if (fb.ShowDialog(new Form() { Height = 500 }) == DialogResult.OK)
-				{
-					this.txtSourcePath.Text = fb.SelectedPath;
-				}
-			}
+            using (FolderBrowserDialog fb = new FolderBrowserDialog())
+            {
+                fb.RootFolder = Environment.SpecialFolder.Desktop;
+                //设置默认根目录是桌面
+                fb.Description = "请选择算法分析原图目录:";
+                //设置对话框说明
+                if (fb.ShowDialog(new Form() { Height = 500 }) == DialogResult.OK)
+                {
+                    this.txtSourcePath.Text = fb.SelectedPath;
+                }
+            }
+        }
+        
+        private void txtLogs_TextChanged(object sender, EventArgs e)
+        {
+
+        }
+
+        private void Segment_FormClosing(object sender, FormClosingEventArgs e)
+        {
+            if (worker != null && worker.IsBusy)
+            {
+                worker.CancelAsync();
+                // 可选：等待一小段时间让worker有机会清理
+            }
+        }
+
+        private void pnlAlgorithmAnalysis_Paint(object sender, PaintEventArgs e)
+        {
+
         }
     }
 }

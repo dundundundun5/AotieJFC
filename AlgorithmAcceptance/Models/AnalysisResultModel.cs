@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace AlgorithmAcceptance.Models
+namespace AlgorithmAcceptanceTool.Models
 {
     public class AnalysisResultModel
     {

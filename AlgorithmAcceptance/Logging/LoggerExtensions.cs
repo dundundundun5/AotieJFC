@@ -1,7 +1,7 @@
-﻿using AlgorithmAcceptance.Utils;
+﻿using AlgorithmAcceptanceTool.Utils;
 using System;
 
-namespace AlgorithmAcceptance.Logging
+namespace AlgorithmAcceptanceTool.Logging
 {
     internal static class LoggerExtensions
     {

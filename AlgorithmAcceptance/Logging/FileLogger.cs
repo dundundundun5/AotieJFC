@@ -1,8 +1,8 @@
-﻿using AlgorithmAcceptance.Utils;
+﻿using AlgorithmAcceptanceTool.Utils;
 using log4net;
 using System;
 
-namespace AlgorithmAcceptance.Logging
+namespace AlgorithmAcceptanceTool.Logging
 {
     class FileLogger : ILogger
     {
@@ -22,18 +22,14 @@ namespace AlgorithmAcceptance.Logging
         public void Log(LogLevel level, string message)
         {
             if (!IsEnabled(level))
-            {
                 return;
-            }
             _log.Info($"{DateTime.Now:HH:mm:ss} [{level}] {message}");
         }
 
         public void Log(LogLevel level, string message, Exception exception)
         {
             if (!IsEnabled(level))
-            {
                 return;
-            }
             _log.Info($"{DateTime.Now:HH:mm:ss} [{level}] {message} - {exception.GetDetailMessage()}");
         }
     }

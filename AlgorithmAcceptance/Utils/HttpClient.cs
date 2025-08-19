@@ -1,5 +1,5 @@
-﻿using AlgorithmAcceptance.Logging;
-using AlgorithmAcceptance.Managers;
+﻿using AlgorithmAcceptanceTool.Logging;
+using AlgorithmAcceptanceTool.Managers;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
 using System;
@@ -9,7 +9,7 @@ using System.Net;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace AlgorithmAcceptance.Utils
+namespace AlgorithmAcceptanceTool.Utils
 {
     public class HttpClient
     {
@@ -26,9 +26,7 @@ namespace AlgorithmAcceptance.Utils
             get
             {
                 if (_instance == null)
-                {
                     _instance = new HttpClient();
-                }
                 return _instance;
             }
         }
@@ -40,17 +38,13 @@ namespace AlgorithmAcceptance.Utils
                 ContractResolver = new CamelCasePropertyNamesContractResolver()
             };
             client = new WebClient();
-            client.Encoding = System.Text.Encoding.GetEncoding("utf-8");
+            client.Encoding = Encoding.GetEncoding("utf-8");
         }
         public T Post<T>(string url, object data = null, Dictionary<string, string> headers = null)
         {
             if (headers != null)
-            {
                 foreach (var item in headers)
-                {
                     client.Headers[item.Key] = item.Value;
-                }
-            }
             client.Headers[HttpRequestHeader.ContentType] = "application/json";
 
             // Serialise the data we are sending in to JSON
@@ -64,28 +58,20 @@ namespace AlgorithmAcceptance.Utils
         public T Get<T>(string url, Dictionary<string, string> data = null, Dictionary<string, string> headers = null)
         {
             if (headers != null)
-            {
                 foreach (var item in headers)
-                {
                     // Set the header so it knows we are sending JSON
                     client.Headers[item.Key] = item.Value;
-                }
-            }
             client.Headers[HttpRequestHeader.ContentType] = "application/json";
 
             string queryString = "";
 
             if (data != null)
-            {
                 foreach (var pair in data)
                 {
                     if (queryString.Length != 0)
-                    {
                         queryString += "&";
-                    }
                     queryString += pair.Key + "=" + pair.Value;
                 }
-            }
 
             var response = client.DownloadString(url + "?" + queryString);
             logger.Log(LogLevel.Info, $"http get:{url},response" + response);

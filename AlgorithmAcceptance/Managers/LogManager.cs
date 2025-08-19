@@ -1,8 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
-using AlgorithmAcceptance.Logging;
+using AlgorithmAcceptanceTool.Logging;
 
-namespace AlgorithmAcceptance.Managers
+namespace AlgorithmAcceptanceTool.Managers
 {
     public class LogManager
     {
@@ -33,9 +33,7 @@ namespace AlgorithmAcceptance.Managers
         {
             var loggers = new List<ILogger>();
             foreach (var item in _providers)
-            {
                 loggers.Add(item.CreateLogger(name));
-            }
             return loggers;
         }
     }

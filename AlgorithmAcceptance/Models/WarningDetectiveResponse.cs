@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 
-namespace AlgorithmAcceptance.Models
+namespace AlgorithmAcceptanceTool.Models
 {
     public class WarningDetectiveResponse
     {
