@@ -1,6 +1,6 @@
-﻿using AlgorithmAcceptance.Managers;
-using AlgorithmAcceptance.Models;
-using AlgorithmAcceptance.Utils;
+﻿using AlgorithmAcceptanceTool.Managers;
+using AlgorithmAcceptanceTool.Models;
+using AlgorithmAcceptanceTool.Utils;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;

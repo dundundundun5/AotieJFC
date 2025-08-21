@@ -1,13 +1,11 @@
-# 算法验收工具
-
-## `feature_all-in-one` 功能简述
-`命名空间修改: * -> *Tool表示工具`
-
+# feature_jfc-tool-package分支
+解决方案 $\rightarrow$ AotieJFC
+## AotieJFC.AlgorithmAcceptanceTool
+Windows WinForm应用：算法验收工具，三合一
 ### `Main`
 - `主窗口可以无限多开子窗口实例`
 - `Bug1：子窗口实例创建的文件夹在子窗口关闭后仍然会被主窗口占用`
-
-### 以下三个窗口的共有优化
+### `共有优化`
 - `标记错误优化：还将带标注框的错误短图放入errorWithDrawing文件夹`
 - `快捷键匹配：右方向键、下方向键->下一张；上方向键、左方向键->上一张；Enter->标记错误图片`
 ### `Segment`
@@ -21,3 +19,11 @@
 ### `OCR`
 - `实时日志优化：直接显示OCR识别结果，如 XXX_XXX.jpg -> 识别车种_识别车号.jpg`
 - `OCR结果显示优化：将框出来的结果裁剪出来放大，并覆盖在原图的左上角和左下角，将OCR识别的结果放在裁剪图片的下方，方便测试者查看`
+
+## AotieJFC.DunAutoUpdateTool
+控制台应用：FTP拉取脚本，用于在18.254/软件工具中拉取其他三个工具的zip到本地，解压后删除
+
+## AotieJFC.PickImagesTool
+Windows WPF应用：找原图，目前主要用于异常检测告警的原图收集和整理
+## AotieJFC.SegmentationTestTool
+Windows WPF应用：切割测试客户端，主要用于收集算法切错的短图

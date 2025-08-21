@@ -346,8 +346,8 @@ namespace AlgorithmAcceptanceTool
                 var image = SixLabors.ImageSharp.Image.Load<Rgba32>(bytes);
                 if (result != null && result.Data.DefectList.Any())
                 {
-                    var redPen = SixLabors.ImageSharp.Drawing.Processing.Pens.Solid(SixLabors.ImageSharp.Color.Red, 5); // 5px stroke width
-                                                                                                                        //绘制识别出的矩形框
+                    var redPen = SixLabors.ImageSharp.Drawing.Processing.Pens.Solid(SixLabors.ImageSharp.Color.Red, 5); //绘制识别出的矩形框
+                    int diff = 2049;
                     foreach (var defect in result.Data.DefectList)
                     {
                         var x1 = (int)defect.TopLeft.X;
@@ -355,17 +355,24 @@ namespace AlgorithmAcceptanceTool
                         var y1 = (int)defect.TopLeft.Y;
                         var y2 = (int)defect.BottomRight.Y;
                         var rect = new RectangularPolygon(x1, y1, x2 - x1, y2 - y1);
-
+                        if (diff > (y2 - y1))
+                            diff = y2 - y1;
                         image.Mutate(x => x.Draw(redPen, rect));
                     }
 
                     //绘制识别出的矩形框bottomRight的Y坐标
-                    string y = string.Join(",", result.Data.DefectList.Select(d => (int)d.BottomRight.Y).ToArray());
-                    SixLabors.Fonts.FontFamily fontFamily = SixLabors.Fonts.SystemFonts.Families.FirstOrDefault();
+                    string upperY = string.Join(",", result.Data.DefectList.Select(d => (int)d.TopLeft.Y).ToArray());
+                    string bottomY = string.Join(",", result.Data.DefectList.Select(d => (int)d.BottomRight.Y).ToArray());
+                    SixLabors.Fonts.FontFamily fontFamily = SixLabors.Fonts.SystemFonts.Get("Arial");
                     if (fontFamily != null)
                     {
                         SixLabors.Fonts.Font font = fontFamily.CreateFont(100, SixLabors.Fonts.FontStyle.Bold);
-                        image.Mutate(x => x.DrawText(y.ToString(), font, SixLabors.ImageSharp.Color.GreenYellow, new PointF(5, 5)));
+                        image.Mutate(x => x.DrawText($"Top-Y:{upperY}", font, SixLabors.ImageSharp.Color.CornflowerBlue, new PointF(5, 5)));
+                        image.Mutate(x => x.DrawText($"Bottom-Y:{bottomY}", font, SixLabors.ImageSharp.Color.GreenYellow,
+                            new PointF(5, 125)));
+                        image.Mutate(x => x.DrawText($"Diff-Y:{diff.ToString()}", font, SixLabors.ImageSharp.Color.OrangeRed,
+                            new PointF(5, 245)));
+
                     }
 
                     //绘制centerX分割线
