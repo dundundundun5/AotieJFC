@@ -139,7 +139,16 @@ namespace AlgorithmAcceptanceTool
                     counter++;
                     try
                     {
-                        analysis_image(param.DestPath, imgPath, fileName);
+                        if (PresentTaskName == "LEFT")
+                        {
+                            analysis_image(param.DestPath, imgPath, fileName, "LOAD");
+                            analysis_image(param.DestPath, imgPath, fileName, "LEFT");
+                        }
+                        else
+                        {
+                            analysis_image(param.DestPath, imgPath, fileName, PresentTaskName);
+                        }
+                        
                     }
                     catch (System.Exception ex)
                     {
@@ -338,7 +347,7 @@ namespace AlgorithmAcceptanceTool
             RemoteManager.Instance.Init();
         }
 
-        private void analysis_image(string destPath, string imgPath, string fileName)
+        private void analysis_image(string destPath, string imgPath, string fileName, string taskName)
         {
 
             HttpWebRequest request = (HttpWebRequest)WebRequest.Create(ServiceEndPoint);
@@ -350,7 +359,7 @@ namespace AlgorithmAcceptanceTool
 
             // 添加文件
             form.AddStreamFile("image_file", fileName, bytes);
-            form.AddFormField("task_name", PresentTaskName);
+            form.AddFormField("task_name", taskName);
             form.PrepareFormData();
 
             request.Method = "POST";
@@ -382,29 +391,44 @@ namespace AlgorithmAcceptanceTool
                 }
             }
 
-            double defectScore;
-            double defectValue;
+            double defectScore = 0;
+            double defectValue = 0;
+            string label = "没检测到";
+            
             try
             {
-                defectScore = result.Data.DefectList[0].DefectScore;
-                defectValue = result.Data.DefectList[0].DefectValue;
-                string label = result.Data.DefectList[0].DefectType;
-                if (label == "BT")
-                    append_log($"- {fileName} -> 标签={label}, 亮度={defectValue}, 分数={defectScore*100:F2}{Environment.NewLine}");
-                else
+                
+                foreach (var l in result.Data.DefectList)
                 {
-                    append_log($"- {fileName} -> 标签={label}, 分数={defectScore*100:F2}{Environment.NewLine}");
+                    if (l is null)
+                    {
+                        continue;
+                    }
+
+                    defectScore = l.DefectScore;
+                    defectValue = l.DefectValue;
+                    label = l.DefectType;
+                    continue;
+                }
+                if (label == "BT")
+                    append_log($"- {taskName} -> {fileName} -> 标签={label}, 亮度={defectValue}, 分数={defectScore*100:F2}{Environment.NewLine}");
+                else if (label == "没检测到")
+                {
+                    append_log($"- {taskName} -> {fileName} -> {content}{Environment.NewLine}");
+                } 
+                else {
+                    append_log($"- {taskName} -> {fileName} -> 标签={label}, 分数={defectScore*100:F2}{Environment.NewLine}");
                 }
                 DefectScores.Add(defectScore);
             }
             catch (Exception e)
             {
                 // append_log($"{fileName} -> {content}{Environment.NewLine}");
-                append_log($"- {fileName} -> []{Environment.NewLine}");
+                append_log($"- {fileName} -> {content}{Environment.NewLine}");
             }
 
 
-            image.Save(Path.Combine(destPath, fileName));
+            image.Save(Path.Combine(destPath, $"{taskName}_{label}_{fileName}"));
 
             streamReader.Close();
             response.Close();

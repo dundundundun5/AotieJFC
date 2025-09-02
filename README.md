@@ -2,6 +2,8 @@
 解决方案 $\rightarrow$ AotieJFC
 ## AotieJFC.AlgorithmAcceptanceTool
 Windows WinForm应用：算法验收工具，三合一
+
+如果碰到编译无法完成，就删除AssemblyInfo.cs内的所有内容
 ### `Main`
 - `主窗口可以无限多开子窗口实例`
 - `Bug1：子窗口实例创建的文件夹在子窗口关闭后仍然会被主窗口占用`
