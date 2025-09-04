@@ -410,16 +410,22 @@ namespace AlgorithmAcceptanceTool
                     label = l.DefectType;
                     continue;
                 }
+
                 if (label == "BT")
+                {
                     append_log($"- {taskName} -> {fileName} -> 标签={label}, 亮度={defectValue}, 分数={defectScore*100:F2}{Environment.NewLine}");
+                    DefectScores.Add(defectScore);
+                }
+                    
                 else if (label == "没检测到")
                 {
                     append_log($"- {taskName} -> {fileName} -> {content}{Environment.NewLine}");
                 } 
                 else {
+                    DefectScores.Add(defectScore);
                     append_log($"- {taskName} -> {fileName} -> 标签={label}, 分数={defectScore*100:F2}{Environment.NewLine}");
                 }
-                DefectScores.Add(defectScore);
+                
             }
             catch (Exception e)
             {
