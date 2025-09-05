@@ -155,11 +155,12 @@
             pnlAlgorithmAnalysis.Padding = new System.Windows.Forms.Padding(0, 0, 12, 14);
             pnlAlgorithmAnalysis.Size = new System.Drawing.Size(1141, 316);
             pnlAlgorithmAnalysis.TabIndex = 1;
+            pnlAlgorithmAnalysis.Paint += pnlAlgorithmAnalysis_Paint;
             // 
             // comboBox1
             // 
             comboBox1.FormattingEnabled = true;
-            comboBox1.Items.AddRange(new object[] { "车身", "走行", "左侧标志灯" });
+            comboBox1.Items.AddRange(new object[] { "车身", "走行", "标志灯" });
             comboBox1.Location = new System.Drawing.Point(132, 72);
             comboBox1.Margin = new System.Windows.Forms.Padding(4);
             comboBox1.Name = "comboBox1";

@@ -26,12 +26,13 @@ namespace AlgorithmAcceptanceTool
         private int imgIndex = 0;
         private Image currentImage = null;
         private static string ServiceEndPoint = ConfigurationManager.AppSettings["RiskDetectServiceEndPoint"];
-        
+
         private BackgroundWorker worker;
         private List<double> DefectScores { get; set; } = [];
         private string PresentTaskName { get; set; } = "LOAD";
-        private (string, string) StationNApi { get; set; } 
+        private (string, string) StationNApi { get; set; }
         private static string ErrorFolder = "error", ResultFolder = "result", ErrorWithDrawingFolder = "errorWithDrawing";
+        private int bias = 0;
         public RiskDetect()
         {
             InitializeComponent();
@@ -141,14 +142,18 @@ namespace AlgorithmAcceptanceTool
                     {
                         if (PresentTaskName == "LEFT")
                         {
-                            analysis_image(param.DestPath, imgPath, fileName, "LOAD");
-                            analysis_image(param.DestPath, imgPath, fileName, "LEFT");
+                            bool flag1 = analysis_image(param.DestPath, imgPath, fileName, "LOAD");
+                            bool flag2 = analysis_image(param.DestPath, imgPath, fileName, "LEFT");
+                            if (flag1 && flag2)
+                            {
+                                bias++;
+                            }
                         }
                         else
                         {
                             analysis_image(param.DestPath, imgPath, fileName, PresentTaskName);
                         }
-                        
+
                     }
                     catch (System.Exception ex)
                     {
@@ -312,14 +317,14 @@ namespace AlgorithmAcceptanceTool
             try
             {
                 double min = DefectScores.Min(), max = DefectScores.Max(), mean = DefectScores.Average();
-                append_log($"分数最小值={min*100:F}, 分数最大值={max*100:F}, 分数平均值={mean*100:F1}, 检出率={DefectScores.Count}/{imgArray.Count}*100%={1.0 * DefectScores.Count/imgArray.Count*100:F2}%{Environment.NewLine}");
+                append_log($"分数最小值={min * 100:F}, 分数最大值={max * 100:F}, 分数平均值={mean * 100:F1}, 检出率={DefectScores.Count - bias}/{imgArray.Count - bias}*100%={1.0 * DefectScores.Count / imgArray.Count * 100:F2}%{Environment.NewLine}");
             }
             catch (Exception e)
             {
                 append_log($"均未检出 检出数=0{Environment.NewLine}");
             }
 
-            
+
 
         }
 
@@ -347,9 +352,8 @@ namespace AlgorithmAcceptanceTool
             RemoteManager.Instance.Init();
         }
 
-        private void analysis_image(string destPath, string imgPath, string fileName, string taskName)
+        private bool analysis_image(string destPath, string imgPath, string fileName, string taskName)
         {
-
             HttpWebRequest request = (HttpWebRequest)WebRequest.Create(ServiceEndPoint);
             MsMultiPartFormData form = new MsMultiPartFormData();
             FileStream fs = new FileStream(imgPath, FileMode.Open, FileAccess.Read);
@@ -394,10 +398,10 @@ namespace AlgorithmAcceptanceTool
             double defectScore = 0;
             double defectValue = 0;
             string label = "没检测到";
-            
+            bool flag = false;
             try
             {
-                
+
                 foreach (var l in result.Data.DefectList)
                 {
                     if (l is null)
@@ -413,24 +417,30 @@ namespace AlgorithmAcceptanceTool
 
                 if (label == "BT")
                 {
-                    append_log($"- {taskName} -> {fileName} -> 标签={label}, 亮度={defectValue}, 分数={defectScore*100:F2}{Environment.NewLine}");
+                    append_log($"- {taskName} -> {fileName} -> 标签={label}, 亮度={defectValue}, 分数={defectScore * 100:F2}{Environment.NewLine}");
                     DefectScores.Add(defectScore);
+                    flag = true;
                 }
-                    
+
                 else if (label == "没检测到")
                 {
                     append_log($"- {taskName} -> {fileName} -> {content}{Environment.NewLine}");
-                } 
-                else {
-                    DefectScores.Add(defectScore);
-                    append_log($"- {taskName} -> {fileName} -> 标签={label}, 分数={defectScore*100:F2}{Environment.NewLine}");
+                    flag = false;
                 }
-                
+                else
+                {
+                    DefectScores.Add(defectScore);
+                    append_log($"- {taskName} -> {fileName} -> 标签={label}, 分数={defectScore * 100:F2}{Environment.NewLine}");
+                    flag = true;
+                }
+
             }
             catch (Exception e)
             {
                 // append_log($"{fileName} -> {content}{Environment.NewLine}");
                 append_log($"- {fileName} -> {content}{Environment.NewLine}");
+
+
             }
 
 
@@ -438,6 +448,7 @@ namespace AlgorithmAcceptanceTool
 
             streamReader.Close();
             response.Close();
+            return flag;
 
         }
 
@@ -467,7 +478,7 @@ namespace AlgorithmAcceptanceTool
             {
                 case "车身": PresentTaskName = "LOAD"; break;
                 case "走行": PresentTaskName = "BODY"; break;
-                case "左侧标志灯": PresentTaskName = "LEFT"; break;
+                case "标志灯": PresentTaskName = "LEFT"; break;
 
             }
             append_log($"异常检测类型 -> {taskName}{Environment.NewLine}");
@@ -479,6 +490,11 @@ namespace AlgorithmAcceptanceTool
         }
 
         private void txtSourcePath_TextChanged(object sender, EventArgs e)
+        {
+
+        }
+
+        private void pnlAlgorithmAnalysis_Paint(object sender, PaintEventArgs e)
         {
 
         }
