@@ -142,11 +142,22 @@ namespace AlgorithmAcceptanceTool
                     {
                         if (PresentTaskName == "LEFT")
                         {
-                            bool flag1 = analysis_image(param.DestPath, imgPath, fileName, "LOAD");
-                            bool flag2 = analysis_image(param.DestPath, imgPath, fileName, "LEFT");
-                            if (flag1 && flag2)
+                            (bool, string) res1 = analysis_image(param.DestPath, imgPath, fileName, "LOAD");
+                            (bool, string) res2 = analysis_image(param.DestPath, imgPath, fileName, "LEFT");
+                            if (res1.Item1 && res2.Item1)
                             {
                                 bias++;
+                                File.Delete(res2.Item2);
+                            }
+
+                            if (res1.Item1 && !res2.Item1)
+                            {
+                                File.Delete(res2.Item2);
+                            }
+
+                            if (!res1.Item1 && res2.Item1)
+                            {
+                                File.Delete(res1.Item2);
                             }
                         }
                         else
@@ -160,17 +171,6 @@ namespace AlgorithmAcceptanceTool
                         append_log($"- {fileName}解析失败，Error: {ex.Message}{Environment.NewLine}");
                         continue;
                     }
-                    // 看看获取到的图片是否正常，不正常的都移到error文件夹
-                    // var fileFullName = Path.Combine(param.DestPath, fileName);
-                    // try
-                    // {
-                    //     var tmp = Image.FromFile(fileFullName);
-                    // }
-                    // catch
-                    // {
-                    //     move_file(fileFullName, param.ErrorPath);
-                    // }
-                    // append_log($"{DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")}: 文件{fileName}处理完成{Environment.NewLine}");
                 }
                 e.Result = param;
             }
@@ -317,7 +317,7 @@ namespace AlgorithmAcceptanceTool
             try
             {
                 double min = DefectScores.Min(), max = DefectScores.Max(), mean = DefectScores.Average();
-                append_log($"分数最小值={min * 100:F}, 分数最大值={max * 100:F}, 分数平均值={mean * 100:F1}, 检出率={DefectScores.Count - bias}/{imgArray.Count - bias}*100%={1.0 * DefectScores.Count / imgArray.Count * 100:F2}%{Environment.NewLine}");
+                append_log($"分数最小值={min * 100:F}, 分数最大值={max * 100:F}, 分数平均值={mean * 100:F1}, 检出率={DefectScores.Count - bias}/{imgArray.Count}*100%={1.0 * DefectScores.Count / imgArray.Count * 100:F2}%{Environment.NewLine}");
             }
             catch (Exception e)
             {
@@ -352,7 +352,7 @@ namespace AlgorithmAcceptanceTool
             RemoteManager.Instance.Init();
         }
 
-        private bool analysis_image(string destPath, string imgPath, string fileName, string taskName)
+        private (bool, string) analysis_image(string destPath, string imgPath, string fileName, string taskName)
         {
             HttpWebRequest request = (HttpWebRequest)WebRequest.Create(ServiceEndPoint);
             MsMultiPartFormData form = new MsMultiPartFormData();
@@ -425,7 +425,6 @@ namespace AlgorithmAcceptanceTool
                 else if (label == "没检测到")
                 {
                     append_log($"- {taskName} -> {fileName} -> {content}{Environment.NewLine}");
-                    flag = false;
                 }
                 else
                 {
@@ -443,12 +442,12 @@ namespace AlgorithmAcceptanceTool
 
             }
 
-
-            image.Save(Path.Combine(destPath, $"{taskName}_{label}_{fileName}"));
+            string filePath = Path.Combine(destPath, $"{taskName}_{label}_{fileName.Split("_")[^1]}");
+            image.Save(filePath);
 
             streamReader.Close();
             response.Close();
-            return flag;
+            return (flag, filePath);
 
         }
 

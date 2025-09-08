@@ -2,6 +2,7 @@
   <PropertyGroup>
     <TargetFramework>net8.0-windows</TargetFramework>
     <OutputType>WinExe</OutputType>
+    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
     <IsWebBootstrapper>false</IsWebBootstrapper>
     <PublishUrl>D:\张灵顿\Release\AlgorithmAcceptance\</PublishUrl>
     <Install>true</Install>
