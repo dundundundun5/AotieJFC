@@ -10,6 +10,10 @@
         <UseWindowsForms>False</UseWindowsForms>
     </PropertyGroup>
 
+    <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
+      <DebugType>pdbonly</DebugType>
+    </PropertyGroup>
+
     <ItemGroup>
       <Content Include="PickImagesIcon.ico" />
     </ItemGroup>

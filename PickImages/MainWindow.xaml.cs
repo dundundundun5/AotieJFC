@@ -328,7 +328,6 @@ public partial class MainWindow : Window
     }
     private async void GatherWarningClick(object sender, RoutedEventArgs e)
     {
-        // FtpButton.IsEnabled = true;
         GatherWarningButton.IsEnabled = false;
         await Task.Run(() =>
         {
@@ -342,11 +341,9 @@ public partial class MainWindow : Window
             catch (Exception exception)
             {
                 AsyncWrite(c2t.box, $"{exception.ToString()}\n");
-                return;
             }
         });
         StartInactivityTimer(seconds:2);
-        // PickWarningButton.IsEnabled = true;
 
     }
     private void GatherWarning()
@@ -356,7 +353,6 @@ public partial class MainWindow : Window
         if (Directory.Exists(resultPath))
             Directory.Delete(resultPath, true);
         Directory.CreateDirectory(resultPath);
-        //result -> D:\\station\\warnings
         string yesterdayFolder = _presentDate.ToString("yyyy-MM-dd");
         foreach (var warningLabel in _warningLabels)
         {
@@ -398,9 +394,6 @@ public partial class MainWindow : Window
         }
 
         AsyncWrite(c2t.box, $"Warning长图收集完成，存储在 {resultPath}\n");
-    
-
-        // Process.Start("explorer.exe", resultPath);
     }
     private void PickWarningLongImages()
     {
@@ -488,8 +481,9 @@ public partial class MainWindow : Window
         }
         
         string resultPath = $@"D:\{_presentStation}\{ScoreFolder}";
-        if (!Directory.Exists(resultPath))
-            Directory.CreateDirectory(resultPath);
+        if (Directory.Exists(resultPath))
+            Directory.Delete(resultPath, true);
+        Directory.CreateDirectory(resultPath);
         string filePath = @"D:\warning.txt";
         if (!File.Exists(filePath))
         {
@@ -505,16 +499,23 @@ public partial class MainWindow : Window
             {
                 string[] parts = line.Split(' ');
                 string imagePath = parts[3].Split("e:")[1];
+                string date = imagePath.Split("/")[3];
+                if (date != _presentDate.ToString("yyyy-MM-dd"))
+                    continue;
                 string type = parts[4].Split(":")[1];
                 string defectScore = parts[5].Split(":")[1].Substring(2, 2);
-                string configScore = parts[6].Split(":")[1].Substring(2, 2);
+                string configScore = parts[6].Split(":")[1];
+                if (configScore.Length == 3)
+                    configScore = configScore.Substring(2, 1) + "0";
+                else
+                    configScore = configScore.Substring(2, 2);
                 string newName = $"{_presentStation}_{type}_{defectScore}_{configScore}_{imagePath.Split("\\")[^1].Split("/")[^1]}";
                 File.Copy(imagePath, Path.Join(resultPath, newName), true);
                 AsyncWrite(c2t.box,$"{imagePath} -> {newName} \u2713\n");
             }
             catch (Exception e)
             {
-                
+                AsyncWrite(c2t.box, $"{e} \n");
             }
         }
         
