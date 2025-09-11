@@ -511,7 +511,7 @@ public partial class MainWindow : Window
                     configScore = configScore.Substring(2, 2);
                 string newName = $"{_presentStation}_{type}_{defectScore}_{configScore}_{imagePath.Split("\\")[^1].Split("/")[^1]}";
                 File.Copy(imagePath, Path.Join(resultPath, newName), true);
-                AsyncWrite(c2t.box,$"{imagePath} -> {newName} \u2713\n");
+                AsyncWrite(c2t.box,$"{newName} \u2713\n");
             }
             catch (Exception e)
             {
