@@ -21,7 +21,7 @@ public partial class MainWindow : Window
     private const string SourcePath = @"D:\FTP2";
     private const string WarningFolder = "warning";
     private string?  _presentStation;
-    private const string DetectCsFolder = "车身误检测", DetectZxFolder = "走行误检测", DetectManulFolder = "manual_error";
+    private const string DetectCsFolder = "车身误检测", DetectZxFolder = "走行误检测", DetectManulFolder = "manual_error", ScoreFolder = "score";
     private DispatcherTimer? _inactivityTimer;
     private static DateTime _today = DateTime.Now;
     private static bool initializing = true;
@@ -336,6 +336,7 @@ public partial class MainWindow : Window
             {
                 GatherWarning();
                 PickWarningLongImages();
+                PickImagesByScore();
                 FtpUploadWarning();
             }
             catch (Exception exception)
@@ -405,22 +406,12 @@ public partial class MainWindow : Window
     {
         string stationPath = Path.Join(@"D:\", _presentStation);
         string resultPath = Path.Join(@"D:\", _presentStation, WarningFolder);
-        // string csPath = Path.Join(stationPath, DetectCsFolder), zxPath = Path.Join(stationPath, DetectZxFolder);
         string manualPath = Path.Join(stationPath, DetectManulFolder);
-        int zxAlgorithmError = 0, csAlgorithmError = 0;
-        // if (!Directory.Exists(csPath))
-        //     Directory.CreateDirectory(csPath);
-        // if (!Directory.Exists(zxPath))
-        //     Directory.CreateDirectory(zxPath);
         if (!Directory.Exists(manualPath))
             Directory.CreateDirectory(manualPath);
         foreach (var jpg in Directory.GetFiles(resultPath))
         {
-            ////ZJ+2025-07-23_242008-15-54-20_xx-zx-z+XX-ZX-Z_2025-07-23-PM+2025-07-23-15-54-21-078.jpg
             string[] parts = jpg.Split("\\")[^1].Split("+");
-            // string errorType = parts[0];
-            // if (errorType == "a")
-            //     parts = parts[1..];
             string label = parts[0];
             string orientation = parts[1].Split("_")[2].ToLower();
             string timestamp = parts[1].Split("_")[1];
@@ -461,7 +452,7 @@ public partial class MainWindow : Window
     private void FtpUploadWarning()
     {
         var ftp = Dundun.Ftp();
-        (string, string)[] folderPairs = [(DetectManulFolder, "manual_error")];
+        (string, string)[] folderPairs = [(DetectManulFolder, "manual_error"), (ScoreFolder , "manual_error")];
         foreach (var (localFolder,remoteFolder) in folderPairs)
         {
             string localPath = Path.Join(@"D:\", _presentStation, localFolder);
@@ -482,7 +473,52 @@ public partial class MainWindow : Window
             }
         }
     }
-
+    private void PickImagesByScore()
+    {
+        try
+        {
+            File.Copy(
+                @"D:\deploy\TrainMonitorService.ImageHandler\App_Data\logs\warning\score\warning.txt", 
+                @"D:\warning.txt",
+                true);
+        }
+        catch (Exception e)
+        {
+            AsyncWrite(c2t.box, e.ToString() + "\n");
+        }
+        
+        string resultPath = $@"D:\{_presentStation}\{ScoreFolder}";
+        if (!Directory.Exists(resultPath))
+            Directory.CreateDirectory(resultPath);
+        string filePath = @"D:\warning.txt";
+        if (!File.Exists(filePath))
+        {
+            AsyncWrite(c2t.box, $"{filePath}不存在\n");
+            return;
+        }
+            
+        string[] lines = File.ReadLines(filePath).ToArray();
+        
+        foreach (string line in lines)
+        {
+            try
+            {
+                string[] parts = line.Split(' ');
+                string imagePath = parts[3].Split("e:")[1];
+                string type = parts[4].Split(":")[1];
+                string defectScore = parts[5].Split(":")[1].Substring(2, 2);
+                string configScore = parts[6].Split(":")[1].Substring(2, 2);
+                string newName = $"{_presentStation}_{type}_{defectScore}_{configScore}_{imagePath.Split("\\")[^1].Split("/")[^1]}";
+                File.Copy(imagePath, Path.Join(resultPath, newName), true);
+                AsyncWrite(c2t.box,$"{imagePath} -> {newName} \u2713\n");
+            }
+            catch (Exception e)
+            {
+                
+            }
+        }
+        
+    }
     private void DatetimeChanged(object sender, SelectionChangedEventArgs e)
     {
         if (initializing)

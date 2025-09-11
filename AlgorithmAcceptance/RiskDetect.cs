@@ -26,7 +26,7 @@ namespace AlgorithmAcceptanceTool
         private int imgIndex = 0;
         private Image currentImage = null;
         private static string ServiceEndPoint = ConfigurationManager.AppSettings["RiskDetectServiceEndPoint"];
-
+        private Dictionary<string, string> dict = new Dictionary<string, string>();
         private BackgroundWorker worker;
         private List<double> DefectScores { get; set; } = [];
         private string PresentTaskName { get; set; } = "LOAD";
@@ -148,17 +148,21 @@ namespace AlgorithmAcceptanceTool
                             {
                                 bias++;
                                 File.Delete(res2.Item2);
+                                
                             }
 
-                            if (res1.Item1 && !res2.Item1)
+                            else if (res1.Item1 && !res2.Item1)
                             {
                                 File.Delete(res2.Item2);
+                              
                             }
 
-                            if (!res1.Item1 && res2.Item1)
+                            else if (!res1.Item1 && res2.Item1)
                             {
                                 File.Delete(res1.Item2);
+                                
                             }
+                            
                         }
                         else
                         {
@@ -242,11 +246,9 @@ namespace AlgorithmAcceptanceTool
 
         private void btnMarkError_Click(object sender, EventArgs e)
         {
-            // if ((MessageBox.Show("确定要将图片移入错误结果目录？", "提示", MessageBoxButtons.OKCancel) == DialogResult.OK))
-            // {
             var img = imgArray[imgIndex];
             var fileName = Path.GetFileName(img);
-
+            
             if (!Directory.Exists(this.txtErrorDirectory.Text))
             {
                 Directory.CreateDirectory(this.txtErrorDirectory.Text);
@@ -255,7 +257,7 @@ namespace AlgorithmAcceptanceTool
             {
                 Directory.CreateDirectory(Path.Combine(txtSourcePath.Text, ErrorWithDrawingFolder));
             }
-            FileInfo file = new FileInfo(Path.Combine(this.txtSourcePath.Text, fileName));
+            FileInfo file = new FileInfo(Path.Combine(this.txtSourcePath.Text, dict[fileName]));
             FileInfo fileWithLabel = new FileInfo(Path.Combine(this.txtSourcePath.Text, ResultFolder, fileName));
             if (file.Exists)
             {
@@ -263,7 +265,6 @@ namespace AlgorithmAcceptanceTool
                 fileWithLabel.CopyTo(Path.Combine(txtSourcePath.Text, ErrorWithDrawingFolder, fileName), true);
                 append_log($"{DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")}: 文件{fileName}已完成标记结果错误{Environment.NewLine}");
             }
-            // }
         }
 
         private void initial_analysis()
@@ -442,9 +443,10 @@ namespace AlgorithmAcceptanceTool
 
             }
 
-            string filePath = Path.Combine(destPath, $"{taskName}_{label}_{fileName.Split("_")[^1]}");
+            string newName = $"{taskName}_{label}_{fileName.Split("_")[^1]}";
+            string filePath = Path.Combine(destPath, newName);
             image.Save(filePath);
-
+            dict[newName] = fileName;
             streamReader.Close();
             response.Close();
             return (flag, filePath);

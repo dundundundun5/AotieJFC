@@ -129,7 +129,7 @@
                 Margin="5"
                 HorizontalAlignment="Left"
                 Click="PickWarningButton_OnClick"
-                Content="误检测长图分类" 
+                Content="汇总二级分数过滤原图并上传" 
                 IsEnabled="True"
                 Visibility="Hidden"/>
         </StackPanel>
