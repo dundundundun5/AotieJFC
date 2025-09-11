@@ -447,6 +447,12 @@ public partial class MainWindow : INotifyPropertyChanged
         {
             WriteAsync(_myTextbox.box, $"{locomotiveImagePath}不存在，跳过\n");
         }
+
+        if (!Path.Exists(longImagePath))
+        {
+            WriteAsync(_myTextbox.box, $"{longImagePath}不存在 \n");
+            return "";
+        }
         if (Directory.GetFiles(longImagePath).Length == 0) {
             WriteAsync(_myTextbox.box, $"切割全对！\n");
             return "";
@@ -558,11 +564,8 @@ public partial class MainWindow : INotifyPropertyChanged
                 WriteAsync(_myTextbox.box, $"{ex.ToString()}\n");
             }
         });
-        if (PresentTrainType == "cs-z")
-        {
-            gaps.IsEnabled = true;
-            pickShortButton.IsEnabled = true;
-        }
+        gaps.IsEnabled = true;
+        pickShortButton.IsEnabled = true;
         TrainTypeComboBox.IsEnabled = true;
         DatetimeComboBox.IsEnabled = true;
     }
@@ -591,6 +594,8 @@ public partial class MainWindow : INotifyPropertyChanged
                 return;
             }
         });
+        gaps.IsEnabled = true;
+        pickShortButton.IsEnabled = true;
         TrainTypeComboBox.IsEnabled = true;
         DatetimeComboBox.IsEnabled = true;
     }
@@ -680,11 +685,9 @@ public partial class MainWindow : INotifyPropertyChanged
                 WriteAsync(_myTextbox.box, $"{ex.ToString()}\n");
             }
         });
-        if (PresentTrainType == "cs-z")
-        {
-            gaps.IsEnabled = true;
-            pickShortButton.IsEnabled = true;
-        }
+        
+        gaps.IsEnabled = true;
+        pickShortButton.IsEnabled = true;
         DatetimeComboBox.IsEnabled = true;
         TrainTypeComboBox.IsEnabled = true;
     }
@@ -818,29 +821,45 @@ public partial class MainWindow : INotifyPropertyChanged
             MessageBoxImage.Warning);
         if (result == MessageBoxResult.OK)
         {
-            // CleanButton.IsEnabled = false;
+            
             await Task.Run((() =>
             {
-                try
+                foreach (var f in Directory.GetFiles(Path.Join(AbsolutePath, PresentStation)))
                 {
-                    foreach (var f in Directory.GetFiles(Path.Join(AbsolutePath, PresentStation)))
+                    if (Path.GetFileName(f) != AvatarJpgName)
                     {
-                        if (Path.GetFileName(f) != AvatarJpgName)
+                        try
+                        {
                             File.Delete(f);
+                            WriteAsync(_myTextbox.box, $"- 删除文件{f} \u2713 \n");
+                        }
+                        catch (Exception exception)
+                        {
+                            WriteAsync(_myTextbox.box, $"- 删除文件{f}失败 \n {exception} \u2717 \n");
+                        }
                     }
+                        
+                }
 
-                    foreach (var d in Directory.GetDirectories(Path.Join(AbsolutePath, PresentStation)))
+                foreach (var d in Directory.GetDirectories(Path.Join(AbsolutePath, PresentStation)))
+                {
+                    try
                     {
-                        if (d.Split("\\")[^1].Contains("long_") || d.Split("\\")[^1].Contains("short_"))
+                        string folderName = d.Split("\\")[^1];
+                        if (folderName.Contains("long") || folderName.Contains("short_") || folderName.Contains("score"))
                             continue;
                         Directory.Delete(d, true);
+                        WriteAsync(_myTextbox.box, $"- 删除目录{d} \u2713 \n");
                     }
-                    WriteAsync(_myTextbox.box, $"===============垃圾清理完成！===============\n");
+                    catch (Exception e)
+                    {
+                        WriteAsync(_myTextbox.box, $"- 删除目录{d}失败 \u2717 \n {e}\n");
+                    }
+                    
                 }
-                catch
-                {
-                    WriteAsync(_myTextbox.box, e.ToString()+'\n');
-                }
+                WriteAsync(_myTextbox.box, $"===============垃圾清理完成！===============\n");
+                
+               
             }));
         }
         
