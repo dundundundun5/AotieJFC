@@ -414,7 +414,7 @@ public partial class MainWindow : Window
             try
             {
                 string targetImage = Path.Join(SourcePath, date, timestamp, orientation, filename);
-                File.Copy(targetImage, Path.Join(manualPath, $"{_presentStation}_{label}_{filename}"), true);
+                File.Copy(targetImage, Path.Join(manualPath, $"客户端_{_presentStation}_{label}_{filename}"), true);
                 AsyncWrite(c2t.box, $"{Path.Join(manualPath, $"{_presentStation}_{label}_{filename}")} \u2713\n");
                 File.Delete(jpg);
             }
@@ -509,7 +509,7 @@ public partial class MainWindow : Window
                     configScore = configScore.Substring(2, 1) + "0";
                 else
                     configScore = configScore.Substring(2, 2);
-                string newName = $"{_presentStation}_{type}_{defectScore}_{configScore}_{imagePath.Split("\\")[^1].Split("/")[^1]}";
+                string newName = $"二级分数_{_presentStation}_{type}_{defectScore}_{configScore}_{imagePath.Split("\\")[^1].Split("/")[^1]}";
                 File.Copy(imagePath, Path.Join(resultPath, newName), true);
                 AsyncWrite(c2t.box,$"{newName} \u2713\n");
             }

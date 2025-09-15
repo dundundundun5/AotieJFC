@@ -58,8 +58,15 @@
                 HorizontalAlignment="Left"
                 VerticalAlignment="Top"
                 Click="OpenTrainMonitorLogButton_OnClick"
-                Content="TrainMontiorService.log"
+                Content="收集配置文件"
                 IsEnabled="True" />
+            <ComboBox
+                x:Name="ServiceComboBox"
+                Margin="0,0,0,10"
+                ItemsSource="{Binding TrainTypeList}"
+                SelectedIndex="0"
+                SelectionChanged="ServiceComboBox_OnSelectionChangedChanged" 
+                Visibility="Hidden"/>
             <Button
                 x:Name="OpenImageHandlerLogButton"
                 Grid.Row="1"
@@ -69,8 +76,9 @@
                 HorizontalAlignment="Left"
                 VerticalAlignment="Top"
                 Click="OpenImageHandlerLogButton_OnClick"
-                Content="ImageHandler.log"
-                IsEnabled="True" />
+                Content="imageHandler+一行"
+                IsEnabled="True" 
+                Visibility="Visible"/>
         </StackPanel>
         
 

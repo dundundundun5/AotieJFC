@@ -4,6 +4,8 @@ using System.IO;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Threading;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using Clipboard = System.Windows.Clipboard;
 using ComboBox = System.Windows.Controls.ComboBox;
 using Path = System.IO.Path;
@@ -18,6 +20,26 @@ public partial class MainWindow : INotifyPropertyChanged
     /// 图片的根路径
     /// </summary>
     private const string AbsolutePath = @"D:\";
+    private const string DeployFolder = "deploy";
+    private const string ConfigFolder = "config";
+    private const string DefaultConfigName = "appsettings.json";
+    private const string ReleaseFolder = "Release";
+    private List<String> ServiceList = [];
+    private static readonly (string, string?) [] ServiceConfigPairs =  
+    [
+        ("RawImageProcessor", null),
+        ("ServiceDashboard.Web", null),
+        ("TrainMonitor.AudioRecordProcessor", null),
+        ("TrainMonitor.DeviceProcessor", null),
+        (@"TrainMonitoring\Release", "TrainMonitoring.WPF.exe.config"),
+        ("TrainMonitoringCoreService", null),
+        
+        ("TrainMonitorService", null),
+        (@"TrainMonitorService\Config", "config.txt"),
+        (@"TrainMonitorService\Config", "Default.ccf"),
+        ("TrainMonitorService.ImageHandler", null),
+        (@"TrainStation\Release", "TrainStation.WPF.exe.config")
+    ];
     /// <summary>
     /// 切割长图的源路径
     /// </summary>
@@ -95,8 +117,8 @@ public partial class MainWindow : INotifyPropertyChanged
     /// <summary>
     /// 短图提取数量的选项
     /// </summary>
-    public static List<int> GapList { get; set; } = [8, 14, 20, 50, -30];
-    public int PresentGap { get; set; } = 8;
+    public static List<int> GapList { get; set; } = [1, 8, 14, 20, 50, -30];
+    public int PresentGap { get; set; } = 1;
     /// <summary>
     /// 当前站点的中文名
     /// </summary>
@@ -855,7 +877,6 @@ public partial class MainWindow : INotifyPropertyChanged
                     {
                         WriteAsync(_myTextbox.box, $"- 删除目录{d}失败 \u2717 \n {e}\n");
                     }
-                    
                 }
                 WriteAsync(_myTextbox.box, $"===============垃圾清理完成！===============\n");
                 
@@ -883,14 +904,120 @@ public partial class MainWindow : INotifyPropertyChanged
         Application.Current.Shutdown();
     }
 
-    private void OpenTrainMonitorLogButton_OnClick(object sender, RoutedEventArgs e)
+    private async void OpenTrainMonitorLogButton_OnClick(object sender, RoutedEventArgs e)
     {
-        Process.Start("explorer.exe", Path.Join(AbsolutePath, "deploy", "TrainMonitorService", "App_Data", "logs"));
+        try
+        {
+            await Task.Run((() =>
+            {
+                string sourcePath = Path.Join(AbsolutePath, DeployFolder);
+                string targetPath = Path.Join(AbsolutePath, PresentStation, ConfigFolder);
+                string remotePath = Path.Join(FtpRemote, ConfigFolder);
+                var ftp = Dundun.Ftp();
+                if (Directory.Exists(targetPath))
+                    Directory.Delete(targetPath, true);
+                Directory.CreateDirectory(targetPath);
+                foreach (var serviceConfigPair in ServiceConfigPairs)
+                {
+                    try
+                    {
+                        String servicePath = serviceConfigPair.Item1;
+                        String? serviceConfig = serviceConfigPair.Item2;
+
+                        if (serviceConfig == null)
+                            serviceConfig = DefaultConfigName;
+
+                        string filePath = Path.Join(sourcePath, servicePath, serviceConfig);
+                        string newName =
+                            $"{PresentStation}+{serviceConfigPair.Item1.Replace("\\", "-")}+{serviceConfig}";
+                        File.Copy(filePath, Path.Join(targetPath, newName), true);
+                        // WriteAsync(_myTextbox.box, $" {newName} \u2713 \n");
+                        ftp.UploadFile(Path.Join(targetPath, newName), Path.Join(remotePath, newName));
+                        WriteAsync(_myTextbox.box, $" ftp upload {newName} \u2713 \n");
+                    }
+                    catch (Exception exception)
+                    {
+                        WriteAsync(_myTextbox.box, $"{exception} \n");
+                    }
+                }
+
+            }));
+        }
+        catch (Exception ex)
+        {
+            WriteAsync(_myTextbox.box, $"{ex}\n");
+        }
     }
 
-    private void OpenImageHandlerLogButton_OnClick(object sender, RoutedEventArgs e)
+
+
+    private async void OpenImageHandlerLogButton_OnClick(object sender, RoutedEventArgs e)
     {
-        Process.Start("explorer.exe", Path.Join(AbsolutePath, "deploy", "TrainMonitorService.ImageHandler", "App_Data", "logs"));
+
+        try
+        {
+            await Task.Run(() =>
+            {
+                string filepath = @"D:\deploy\TrainMonitorService.ImageHandler\appsettings.json";
+                string keyName = "LastCarriageExcludeTrainModeList";
+                List<string> value = ["HXD", "HX", "FXD1", "FXD2", "FXD3", "ZE"];
+                string f = File.ReadAllText(filepath);
+                JObject json = JObject.Parse(f);
+
+                foreach (var item in json)
+                {
+                    WriteAsync(_myTextbox.box, $"\"{item.Key}\" : {item.Value}\n");
+                }
+
+                json[keyName] = JToken.FromObject(value);
+                WriteAsync(_myTextbox.box, $"\n--------------------\n{json[keyName]}\n");
+                string res = json.ToString(Formatting.Indented);
+                string newPath = filepath;
+                File.WriteAllText(newPath, res);
+                WriteAsync(_myTextbox.box, $"{newPath} \u2713 \n");
+
+                
+                
+                var process = new Process
+                {
+                    StartInfo = new ProcessStartInfo
+                    {
+                        FileName = "powershell.exe",
+                        Arguments = "-Command \"Restart-Service -Name TrainMonitorService.ImageHandler -Force\"",
+                        UseShellExecute = false,
+                        RedirectStandardOutput = true,
+                        RedirectStandardError = true,
+                        CreateNoWindow = true
+                    }
+                };
+
+                process.Start();
+                string output = process.StandardOutput.ReadToEnd();
+                string error = process.StandardError.ReadToEnd();
+                process.WaitForExit();
+
+                if (process.ExitCode == 0)
+                {
+                    WriteAsync(_myTextbox.box, $"Service restarted successfully\n");
+                }
+                else
+                {
+                    WriteAsync(_myTextbox.box, $"Error: {error}\n");
+                }
+
+            });
+
+        }
+        catch (Exception ex)
+        {
+            WriteAsync(_myTextbox.box, $"{ex}\n");
+        }
+        StartInactivityTimer(2);
+    }
+
+    private void ServiceComboBox_OnSelectionChangedChanged(object sender, SelectionChangedEventArgs e)
+    {
+        
     }
 }
 
