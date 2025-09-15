@@ -59,14 +59,15 @@
                 VerticalAlignment="Top"
                 Click="OpenTrainMonitorLogButton_OnClick"
                 Content="收集配置文件"
-                IsEnabled="True" />
+                IsEnabled="True" 
+                Visibility="Collapsed"/>
             <ComboBox
                 x:Name="ServiceComboBox"
                 Margin="0,0,0,10"
                 ItemsSource="{Binding TrainTypeList}"
                 SelectedIndex="0"
                 SelectionChanged="ServiceComboBox_OnSelectionChangedChanged" 
-                Visibility="Hidden"/>
+                Visibility="Collapsed"/>
             <Button
                 x:Name="OpenImageHandlerLogButton"
                 Grid.Row="1"

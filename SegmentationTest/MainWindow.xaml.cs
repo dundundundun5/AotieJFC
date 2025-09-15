@@ -159,6 +159,7 @@ public partial class MainWindow : INotifyPropertyChanged
         StartInactivityTimer(1800);
         if (PresentStation != "null")
             DownloadAvatarIfNotExist();
+        CollectConfigs();
     }
 
     
@@ -904,7 +905,7 @@ public partial class MainWindow : INotifyPropertyChanged
         Application.Current.Shutdown();
     }
 
-    private async void OpenTrainMonitorLogButton_OnClick(object sender, RoutedEventArgs e)
+    private async void CollectConfigs()
     {
         try
         {
@@ -933,7 +934,7 @@ public partial class MainWindow : INotifyPropertyChanged
                         File.Copy(filePath, Path.Join(targetPath, newName), true);
                         // WriteAsync(_myTextbox.box, $" {newName} \u2713 \n");
                         ftp.UploadFile(Path.Join(targetPath, newName), Path.Join(remotePath, newName));
-                        WriteAsync(_myTextbox.box, $" ftp upload {newName} \u2713 \n");
+                        // WriteAsync(_myTextbox.box, $" ftp upload {newName} \u2713 \n");
                     }
                     catch (Exception exception)
                     {
@@ -947,6 +948,10 @@ public partial class MainWindow : INotifyPropertyChanged
         {
             WriteAsync(_myTextbox.box, $"{ex}\n");
         }
+    }
+    private  void OpenTrainMonitorLogButton_OnClick(object sender, RoutedEventArgs e)
+    {
+        
     }
 
 
@@ -983,6 +988,7 @@ public partial class MainWindow : INotifyPropertyChanged
                     StartInfo = new ProcessStartInfo
                     {
                         FileName = "powershell.exe",
+                        Verb = "runas",
                         Arguments = "-Command \"Restart-Service -Name TrainMonitorService.ImageHandler -Force\"",
                         UseShellExecute = false,
                         RedirectStandardOutput = true,
@@ -1012,7 +1018,7 @@ public partial class MainWindow : INotifyPropertyChanged
         {
             WriteAsync(_myTextbox.box, $"{ex}\n");
         }
-        StartInactivityTimer(2);
+        StartInactivityTimer(60);
     }
 
     private void ServiceComboBox_OnSelectionChangedChanged(object sender, SelectionChangedEventArgs e)
