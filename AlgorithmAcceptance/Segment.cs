@@ -6,7 +6,6 @@ using System.IO;
 using System.Linq;
 using System.Net;
 using System.Windows.Forms;
-using AlgorithmAcceptanceTool.Managers;
 using AlgorithmAcceptanceTool.Models;
 using AlgorithmAcceptanceTool.Utils;
 using Newtonsoft.Json;
@@ -311,7 +310,7 @@ namespace AlgorithmAcceptanceTool
 
         private void MainForm_Load(object sender, EventArgs e)
         {
-            RemoteManager.Instance.Init();
+           
         }
 
         private bool analysis_image(string destPath, string imgPath, string fileName)

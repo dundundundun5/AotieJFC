@@ -1,4 +1,4 @@
-﻿using AlgorithmAcceptanceTool.Managers;
+﻿
 using AlgorithmAcceptanceTool.Models;
 using AlgorithmAcceptanceTool.Utils;
 using Newtonsoft.Json;
@@ -360,7 +360,7 @@ namespace AlgorithmAcceptanceTool
 
         private void MainForm_Load(object sender, EventArgs e)
         {
-            RemoteManager.Instance.Init();
+            
         }
 
         private (string, string) analysis_image(string destPath, string imgPath, string fileName)

@@ -1,4 +1,4 @@
-﻿using AlgorithmAcceptanceTool.Managers;
+﻿
 using AlgorithmAcceptanceTool.Models;
 using AlgorithmAcceptanceTool.Utils;
 using System;
@@ -250,7 +250,7 @@ namespace AlgorithmAcceptance
 
         private void MainForm_Load(object sender, EventArgs e)
         {
-            RemoteManager.Instance.Init();
+            
         }
 
         private void analysis_image(string destPath, string imgPath, string fileName)
