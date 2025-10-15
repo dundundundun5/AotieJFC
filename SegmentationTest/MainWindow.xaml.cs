@@ -965,7 +965,7 @@ public partial class MainWindow : INotifyPropertyChanged
             {
                 string filepath = @"D:\deploy\TrainMonitorService.ImageHandler\appsettings.json";
                 string keyName = "LastCarriageExcludeTrainModeList";
-                List<string> value = ["HXD", "HX", "FXD1", "FXD2", "FXD3", "ZE"];
+                List<string> value = ["XD", "JR", "KZ" ,"ZE"];
                 string f = File.ReadAllText(filepath);
                 JObject json = JObject.Parse(f);
 

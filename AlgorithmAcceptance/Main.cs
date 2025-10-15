@@ -1,6 +1,11 @@
 ﻿using System;
+using System.Diagnostics;
+using System.IO;
+using System.Threading.Tasks;
 using System.Windows.Forms;
 using AlgorithmAcceptance;
+using SixLabors.ImageSharp.Drawing;
+using Path = System.IO.Path;
 
 namespace AlgorithmAcceptanceTool;
 public partial class Main : Form
@@ -59,5 +64,38 @@ public partial class Main : Form
         // 创建新窗口
         T form = new T();
         form.Show(this);
+    }
+
+    private void Main_Load(object sender, EventArgs e)
+    {
+        throw new System.NotImplementedException();
+    }
+
+    private async void button4_Click(object sender, EventArgs e)
+    {
+        FolderBrowserDialog fb = new FolderBrowserDialog();
+        fb.RootFolder = Environment.SpecialFolder.Desktop;
+        //设置默认根目录是桌面
+        fb.Description = "请选择批量修改文件名的目录";
+        //设置对话框说明
+        if (fb.ShowDialog(this) == DialogResult.OK)
+        {
+            await Task.Run((() =>
+            {
+                string path = fb.SelectedPath;
+                string resultPath = Path.Join(path, "文件名仅日期");
+                if (!Directory.Exists(resultPath))
+                    Directory.CreateDirectory(resultPath);
+                foreach (var oldFile in Directory.GetFiles(path))
+                {
+                    string oldName = Path.GetFileName(oldFile);
+                    string newName = oldName.Split("_")[^1];
+                    File.Copy(oldFile, Path.Join(resultPath, newName), true);
+                }
+
+                Process.Start("explorer.exe", resultPath);
+            }));
+            
+        }
     }
 }

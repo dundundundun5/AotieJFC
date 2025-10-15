@@ -32,6 +32,7 @@ partial class Main
         button1 = new System.Windows.Forms.Button();
         button2 = new System.Windows.Forms.Button();
         button3 = new System.Windows.Forms.Button();
+        button4 = new System.Windows.Forms.Button();
         SuspendLayout();
         // 
         // button1
@@ -67,15 +68,29 @@ partial class Main
         button3.UseVisualStyleBackColor = true;
         button3.Click += button3_Click;
         // 
+        // button4
+        // 
+        button4.Font = new System.Drawing.Font("Microsoft YaHei UI", 18F);
+        button4.ForeColor = System.Drawing.SystemColors.WindowFrame;
+        button4.Location = new System.Drawing.Point(21, 261);
+        button4.Name = "button4";
+        button4.Size = new System.Drawing.Size(250, 61);
+        button4.TabIndex = 3;
+        button4.Text = "批量修改文件名";
+        button4.UseVisualStyleBackColor = true;
+        button4.Click += button4_Click;
+        // 
         // Main
         // 
-        AutoScaleDimensions = new System.Drawing.SizeF(7F, 17F);
+        AutoScaleDimensions = new System.Drawing.SizeF(9F, 20F);
         AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-        ClientSize = new System.Drawing.Size(297, 257);
+        ClientSize = new System.Drawing.Size(297, 334);
+        Controls.Add(button4);
         Controls.Add(button3);
         Controls.Add(button2);
         Controls.Add(button1);
         Icon = (System.Drawing.Icon)resources.GetObject("$this.Icon");
+        Margin = new System.Windows.Forms.Padding(4);
         Name = "Main";
         Text = "算法验收三合一";
         ResumeLayout(false);
@@ -86,4 +101,5 @@ partial class Main
     private System.Windows.Forms.Button button1;
     private System.Windows.Forms.Button button2;
     private System.Windows.Forms.Button button3;
+    private System.Windows.Forms.Button button4;
 }

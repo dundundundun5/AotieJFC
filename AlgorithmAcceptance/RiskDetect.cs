@@ -317,7 +317,7 @@ namespace AlgorithmAcceptanceTool
             try
             {
                 double min = DefectScores.Min(), max = DefectScores.Max(), mean = DefectScores.Average();
-                append_log($"分数最小值={min * 100:F}, 分数最大值={max * 100:F}, 分数平均值={mean * 100:F1}, 检出率={DefectScores.Count - bias}/{imgArray.Count}*100%={1.0 * DefectScores.Count / imgArray.Count * 100:F2}%{Environment.NewLine}");
+                append_log($"分数最小值={min * 100:F}, 分数最大值={max * 100:F}, 分数平均值={mean * 100:F1}, 检出率={DefectScores.Count - bias}/{imgArray.Count}*100%={1.0 * (DefectScores.Count - bias) / imgArray.Count * 100:F2}%{Environment.NewLine}");
             }
             catch (Exception e)
             {
@@ -442,7 +442,8 @@ namespace AlgorithmAcceptanceTool
 
             }
 
-            string newName = $"{taskName}_{label}_{fileName.Split("_")[^1]}";
+            // string newName = $"{taskName}_{label}_{fileName}";
+            string newName = $"{label}_{defectScore}_{fileName}";
             string filePath = Path.Combine(destPath, newName);
             image.Save(filePath);
             dict[newName] = fileName;
