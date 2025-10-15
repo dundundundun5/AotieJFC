@@ -68,7 +68,7 @@ public partial class Main : Form
 
     private void Main_Load(object sender, EventArgs e)
     {
-        throw new System.NotImplementedException();
+        
     }
 
     private async void button4_Click(object sender, EventArgs e)
