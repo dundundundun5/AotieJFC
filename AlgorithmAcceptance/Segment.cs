@@ -43,7 +43,7 @@ namespace AlgorithmAcceptanceTool
             }
             else
             {
-                append_log($"- 算法接口默认为18.23{Environment.NewLine}");
+                append_log($"- 算法接口默认为19.53{Environment.NewLine}");
             }
             this.StartPosition = FormStartPosition.CenterScreen;
             this.Width = 1500;

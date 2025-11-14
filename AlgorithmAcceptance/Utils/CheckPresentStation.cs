@@ -9,7 +9,7 @@ using System.Windows.Controls;
 namespace AlgorithmAcceptanceTool.Utils;
 public class CheckPresentStation
 {
-    public static string LocalApi = "18.23";
+    public static string LocalApi = "19.53";
     private static string[] _stations = [
         "伍明",
         "凤台",
