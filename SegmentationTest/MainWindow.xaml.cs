@@ -316,8 +316,17 @@ public partial class MainWindow : INotifyPropertyChanged
     /// </summary>
     private void GatherLongImageOnlyLocomotive() {
         string resultPath = Path.Join(AbsolutePath, PresentStation, OnlyLocomotiveFolder);
-        if (Directory.Exists(resultPath))
-            Directory.Delete(resultPath, true);
+        // bug: 建国总是照片在后台打开，系统问题
+        try
+        {
+            if (Directory.Exists(resultPath))
+                Directory.Delete(resultPath, true);
+        }
+        catch (Exception e)
+        {
+            
+        }
+        
         Directory.CreateDirectory(resultPath);
 
         string yesterdayPath = Path.Join(AbsolutePath, LongImageFolder, $"{_presentDate:yyyy-MM-dd}");

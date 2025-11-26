@@ -88,13 +88,12 @@ public partial class Main : Form
                     Directory.CreateDirectory(resultPath);
                 foreach (var oldFile in Directory.GetFiles(path))
                 {
-                    DateTime now = DateTime.Now;
                     string oldName = Path.GetFileName(oldFile);
                     string newName = oldName.Split("_")[^1];
                     try
                     {
                         string newName2 = oldName.Split("_")[^2];
-                        if (newName2.Contains(now.Year.ToString()))
+                        if (newName2.StartsWith('2'))
                             newName = $"{newName2}_{newName}";
                     }
                     catch (Exception ex)
