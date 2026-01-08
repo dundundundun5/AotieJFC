@@ -19,5 +19,7 @@ namespace AlgorithmAcceptanceTool.Models
 		public string DefectContent { get; set; } = string.Empty;
 
         public int DefectValue { get; set; } = 0;
-    }
+
+        public int DefectArea { get; set; } = 0;
+	}
 }

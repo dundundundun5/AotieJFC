@@ -1,0 +1,36 @@
+<sukiUi:SukiWindow
+    Height="380"
+    Icon="/Assets/avalonia-logo.ico"
+    Title="算法验收工具"
+    Width="250"
+    WindowStartupLocation="CenterScreen"
+    mc:Ignorable="d"
+    x:Class="AlgoritmAcceptanceToolAvalonia.Views.MainWindow"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:sukiUi="clr-namespace:SukiUI.Controls;assembly=SukiUI"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+
+    <Grid>
+
+        <Grid.RowDefinitions />
+        <Grid.ColumnDefinitions />
+
+        <StackPanel Margin="5" Orientation="Vertical">
+
+            <Button
+                Click="OpenSubWindow"
+                Content="异常检测算法验收"
+                FontSize="26"
+                Height="100"
+                Tag="1" />
+        </StackPanel>
+
+
+    </Grid>
+
+
+
+</sukiUi:SukiWindow>

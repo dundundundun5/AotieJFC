@@ -1,0 +1,17 @@
+<Application
+    x:Class="AlgoritmAcceptanceToolAvalonia.App"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:local="using:AlgoritmAcceptanceToolAvalonia"
+    xmlns:sukiUi="clr-namespace:SukiUI;assembly=SukiUI"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <!--  "Default" ThemeVariant follows system theme variant. "Dark" or "Light" are other available options.  -->
+
+    <Application.DataTemplates>
+        <local:ViewLocator />
+    </Application.DataTemplates>
+
+    <Application.Styles>
+        <sukiUi:SukiTheme ThemeColor="Blue" />
+    </Application.Styles>
+</Application>

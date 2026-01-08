@@ -962,9 +962,7 @@ public partial class MainWindow : INotifyPropertyChanged
     {
         
     }
-
-
-
+    
     private async void OpenImageHandlerLogButton_OnClick(object sender, RoutedEventArgs e)
     {
 

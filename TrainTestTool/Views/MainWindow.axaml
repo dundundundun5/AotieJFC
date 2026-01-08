@@ -1,0 +1,142 @@
+<Window
+    Height="630"
+    Title="JFC测试"
+    Width="780"
+    mc:Ignorable="d"
+    x:Class="TrainTestTool.Views.MainWindow"
+    x:DataType="viewModels:MainWindowViewModel"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:viewModels="clr-namespace:TrainTestTool.ViewModels"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <Design.DataContext>
+        <viewModels:MainWindowViewModel />
+    </Design.DataContext>
+
+    <Grid Margin="0">
+
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="150" />
+            <ColumnDefinition Width="Auto" />
+        </Grid.ColumnDefinitions>
+
+        <StackPanel
+            Grid.Column="0"
+            Margin="5"
+            Orientation="Vertical">
+            <TextBlock
+                FontSize="16"
+                HorizontalAlignment="Center"
+                Margin="5"
+                Text="JFC测试选项" />
+            <ComboBox
+                ItemsSource="{Binding StationList}"
+                Margin="5"
+                SelectedItem="{Binding PresentStation}"
+                Width="150" />
+            <ComboBox
+                ItemsSource="{Binding DateList}"
+                Margin="5"
+                SelectedItem="{Binding PresentDate}"
+                Width="150" />
+            <ComboBox
+                ItemsSource="{Binding TrainTypeList}"
+                Margin="5"
+                SelectedItem="{Binding PresentTrainType}"
+                Width="150" />
+            <Button
+                Content="汇总长图"
+                Height="50"
+                HorizontalAlignment="Left"
+                HorizontalContentAlignment="Center"
+                IsEnabled="True"
+                Margin="5"
+                VerticalAlignment="Top"
+                VerticalContentAlignment="Center"
+                Width="150"
+                x:Name="gatherLongButton" />
+            <Button
+                Content="汇总车头长图"
+                Height="50"
+                HorizontalAlignment="Left"
+                HorizontalContentAlignment="Center"
+                IsEnabled="True"
+                Margin="5"
+                VerticalAlignment="Top"
+                VerticalContentAlignment="Center"
+                Width="150" />
+            <Button
+                Content="汇总车尾长图"
+                Height="50"
+                HorizontalAlignment="Left"
+                HorizontalContentAlignment="Center"
+                IsEnabled="True"
+                Margin="5"
+                VerticalAlignment="Top"
+                VerticalContentAlignment="Center"
+                Width="150"
+                x:Name="GatherRearButton" />
+            <ComboBox
+                IsEnabled="False"
+                ItemsSource="{Binding GapList}"
+                Margin="5"
+                SelectedItem="{Binding PresentGap}"
+                Width="150" />
+            <Button
+                Height="50"
+                HorizontalContentAlignment="Center"
+                Margin="5"
+                VerticalContentAlignment="Center"
+                Width="150">
+                <TextBlock Text="保留长图并获取短图" TextWrapping="Wrap" />
+            </Button>
+            <Button
+                Height="50"
+                HorizontalContentAlignment="Center"
+                IsEnabled="True"
+                Margin="5"
+                VerticalContentAlignment="Center"
+                Width="150">
+                <TextBlock Text="FTP上传软件错误短图" TextWrapping="Wrap" />
+            </Button>
+            <Button
+                Height="50"
+                HorizontalContentAlignment="Center"
+                Margin="5"
+                VerticalContentAlignment="Center"
+                Width="150">
+                <TextBlock Text="汇总告警并上传" TextWrapping="Wrap" />
+            </Button>
+            <Button
+                Background="Chartreuse"
+                Content="清理无关文件"
+                Height="50"
+                HorizontalContentAlignment="Center"
+                Margin="5"
+                VerticalAlignment="Top"
+                VerticalContentAlignment="Center"
+                Width="150" />
+        </StackPanel>
+
+        <TextBox
+            AcceptsReturn="True"
+            AcceptsTab="True"
+            Background="White"
+            FontFamily="Consolas"
+            FontSize="14"
+            Foreground="Black"
+            Grid.Column="1"
+            IsReadOnly="True"
+            Margin="5"
+            TextWrapping="NoWrap"
+            Width="600"
+            x:Name="LogTextBox" />
+
+    </Grid>
+
+</Window>

@@ -392,6 +392,7 @@ namespace AlgorithmAcceptanceTool
                 HttpWebResponse response = (HttpWebResponse)request.GetResponse();
                 var streamReader = new StreamReader(response.GetResponseStream());
                 var content = streamReader.ReadToEnd();
+                Console.WriteLine(content);
                 OcrDetectiveResponse result = JsonConvert.DeserializeObject<OcrDetectiveResponse>(content);
                 var image = SixLabors.ImageSharp.Image.Load<Rgba32>(bytes);
                 string trainType = "无", trainNumber = "无";

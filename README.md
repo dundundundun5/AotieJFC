@@ -1,5 +1,21 @@
 # feature_jfc-tool-package分支
+## 算法协议
+
+- segment```json
+{"code":200,"data":{"imageWidth":1024,"imageHeight":2048,"defectList":[{"defectType":"T","defectScore":0.962,"topLeft":{"x":1.7185547351837158,"y":1281.633544921875},"bottomRight":{"x":1023.7366333007812,"y":1708.046630859375}}],"centerX":-1}}```
+
+- risk```json
+{"code":200,"data":{"imageWidth":9982,"imageHeight":2048,"defectList":[{"defectType":"BT","defectScore":0.2523,"topLeft":{"x":9103.660522460938,"y":662.0606689453125},"bottomRight":{"x":9115.3076171875,"y":709.891357421875},"defectArea":850,"defectValue":113}]}}```
+
+- ocr```json
+    {"code":200,"data":{"imageWidth":15187,"imageHeight":2048,"defectList":[{"defectType":"CZ","defectContent":"KZ2","defectKind":"FT","defectScore":0.6742,"topLeft":{"x":1576,"y":1319},"bottomRight":{"x":1699,"y":1382}},{"defectType":"CH","defectContent":"12008","defectKind":"","defectScore":0.6712,"topLeft":{"x":1710,"y":1318},"bottomRight":{"x":1877,"y":1383}}]}}```
+
+
+
 解决方案 $\rightarrow$ AotieJFC
+
+
+
 ## AotieJFC.AlgorithmAcceptanceTool
 Windows WinForm应用：算法验收工具，三合一
 

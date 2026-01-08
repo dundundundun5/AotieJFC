@@ -341,6 +341,7 @@ namespace AlgorithmAcceptanceTool
                 HttpWebResponse response = (HttpWebResponse)request.GetResponse();
                 var streamReader = new StreamReader(response.GetResponseStream());
                 var content = streamReader.ReadToEnd();
+                Console.WriteLine(content);
                 TrainSegmentResponse result = JsonConvert.DeserializeObject<TrainSegmentResponse>(content);
                 var image = SixLabors.ImageSharp.Image.Load<Rgba32>(bytes);
                 if (result != null && result.Data.DefectList.Any())

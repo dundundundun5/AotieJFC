@@ -1,16 +1,16 @@
 ﻿<Window
+    Height="550"
+    Title="列车测试工具v1.0.0"
+    Width="1230"
+    mc:Ignorable="d"
     x:Class="SegmentationTestTool.MainWindow"
+    x:Name="dundun"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:local="clr-namespace:SegmentationTest"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-    x:Name="dundun"
-    Title="列车测试工具v1.0.0"
-    Width="1230"
-    Height="550"
-    mc:Ignorable="d">
-    <Grid Margin="0" DataContext="{Binding ElementName=dundun}">
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <Grid DataContext="{Binding ElementName=dundun}" Margin="0">
 
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
@@ -29,185 +29,184 @@
             <ColumnDefinition Width="150" />
             <ColumnDefinition Width="150" />
         </Grid.ColumnDefinitions>
-        
+
         <StackPanel Grid.Column="8" Grid.RowSpan="3">
             <CheckBox
-                x:Name="ImageGlassCheckBox"
-                Margin="10"
                 Content="ImageGlass"
                 IsChecked="{Binding ImageGlass, Mode=TwoWay}"
-                IsEnabled="False" />
-            <CheckBox
-                x:Name="OneTreeCheckBox"
+                IsEnabled="False"
                 Margin="10"
+                x:Name="ImageGlassCheckBox" />
+            <CheckBox
                 Content="OneTree"
                 IsChecked="{Binding OneTree, Mode=TwoWay}"
-                IsEnabled="False" />
-            <CheckBox
-                x:Name="VSCodeCheckBox"
+                IsEnabled="False"
                 Margin="10"
+                x:Name="OneTreeCheckBox" />
+            <CheckBox
                 Content="VSCode"
                 IsChecked="{Binding VsCode, Mode=TwoWay}"
-                IsEnabled="False" />
+                IsEnabled="False"
+                Margin="10"
+                x:Name="VSCodeCheckBox" />
             <Button
-                x:Name="OpenTrainMonitorLogButton"
-                Grid.Row="1"
-                Width="150"
-                Height="50"
-                Margin="0,0,0,10"
-                HorizontalAlignment="Left"
-                VerticalAlignment="Top"
                 Click="OpenTrainMonitorLogButton_OnClick"
                 Content="收集配置文件"
-                IsEnabled="True" 
-                Visibility="Collapsed"/>
-            <ComboBox
-                x:Name="ServiceComboBox"
-                Margin="0,0,0,10"
-                ItemsSource="{Binding TrainTypeList}"
-                SelectedIndex="0"
-                SelectionChanged="ServiceComboBox_OnSelectionChangedChanged" 
-                Visibility="Collapsed"/>
-            <Button
-                x:Name="OpenImageHandlerLogButton"
                 Grid.Row="1"
-                Width="150"
                 Height="50"
-                Margin="0,0,0,10"
                 HorizontalAlignment="Left"
+                IsEnabled="True"
+                Margin="0,0,0,10"
                 VerticalAlignment="Top"
+                Visibility="Collapsed"
+                Width="150"
+                x:Name="OpenTrainMonitorLogButton" />
+            <ComboBox
+                ItemsSource="{Binding TrainTypeList}"
+                Margin="0,0,0,10"
+                SelectedIndex="0"
+                SelectionChanged="ServiceComboBox_OnSelectionChangedChanged"
+                Visibility="Collapsed"
+                x:Name="ServiceComboBox" />
+            <Button
                 Click="OpenImageHandlerLogButton_OnClick"
                 Content="imageHandler+一行"
-                IsEnabled="True" 
-                Visibility="Visible"/>
+                Grid.Row="1"
+                Height="50"
+                HorizontalAlignment="Left"
+                IsEnabled="True"
+                Margin="0,0,0,10"
+                VerticalAlignment="Top"
+                Visibility="Visible"
+                Width="150"
+                x:Name="OpenImageHandlerLogButton" />
         </StackPanel>
-        
 
-        
+
+
         <StackPanel
+            Grid.Column="0"
             Grid.Row="1"
             Grid.RowSpan="4"
-            Grid.Column="0"
             Margin="0,0,0,0"
             Orientation="Vertical">
             <TextBlock
-                x:Name="selectResult"
-                Margin="0,0,0,10"
                 FontSize="16"
-                Text="{Binding SelectedItem, ElementName=stations, StringFormat='目前站点是{0}', TargetNullValue='未选择任何站点'}" />
-            
-            <ComboBox
-                x:Name="stations"
                 Margin="0,0,0,10"
+                Text="{Binding SelectedItem, ElementName=stations, StringFormat='目前站点是{0}', TargetNullValue='未选择任何站点'}"
+                x:Name="selectResult" />
+
+            <ComboBox
                 ItemsSource="{Binding StationList}"
-                SelectedItem="{x:Null}"
-                SelectionChanged="StationChanged" />
-            <ComboBox
-                x:Name="DatetimeComboBox"
                 Margin="0,0,0,10"
+                SelectedItem="{x:Null}"
+                SelectionChanged="StationChanged"
+                x:Name="stations" />
+            <ComboBox
                 ItemStringFormat="yyyy-MM-dd"
                 ItemsSource="{Binding DateList}"
+                Margin="0,0,0,10"
                 SelectedIndex="1"
-                SelectionChanged="DatetimeChanged" />
+                SelectionChanged="DatetimeChanged"
+                x:Name="DatetimeComboBox" />
             <ComboBox
-                x:Name="TrainTypeComboBox"
-                Margin="0,0,0,10"
                 ItemsSource="{Binding TrainTypeList}"
-                SelectedIndex="0"
-                SelectionChanged="TrainTypeChanged" />
-            <Button
-                x:Name="gatherLongButton"
-                Grid.Row="1"
-                Width="150"
-                Height="50"
                 Margin="0,0,0,10"
-                HorizontalAlignment="Left"
-                VerticalAlignment="Top"
+                SelectedIndex="0"
+                SelectionChanged="TrainTypeChanged"
+                x:Name="TrainTypeComboBox" />
+            <Button
                 Click="GatherLongClick"
                 Content="汇总长图"
-                IsEnabled="True" />
-            <Button
-                x:Name="gatherLocomotiveButton"
                 Grid.Row="1"
-                Width="150"
                 Height="50"
-                Margin="0,0,0,10"
                 HorizontalAlignment="Left"
+                IsEnabled="True"
+                Margin="0,0,0,10"
                 VerticalAlignment="Top"
+                Width="150"
+                x:Name="gatherLongButton" />
+            <Button
                 Click="GatherLocomotiveClick"
                 Content="汇总车头长图"
-                IsEnabled="True" />
-            <Button
-                x:Name="GatherRearButton"
                 Grid.Row="1"
-                Width="150"
                 Height="50"
-                Margin="0,0,0,10"
                 HorizontalAlignment="Left"
+                IsEnabled="True"
+                Margin="0,0,0,10"
                 VerticalAlignment="Top"
+                Width="150"
+                x:Name="gatherLocomotiveButton" />
+            <Button
                 Click="GatherRearClick"
                 Content="汇总车尾长图"
-                IsEnabled="True" />
-            <ComboBox
-                x:Name="gaps"
+                Grid.Row="1"
+                Height="50"
+                HorizontalAlignment="Left"
+                IsEnabled="True"
                 Margin="0,0,0,10"
+                VerticalAlignment="Top"
+                Width="150"
+                x:Name="GatherRearButton" />
+            <ComboBox
+                IsEnabled="False"
                 ItemsSource="{Binding GapList}"
+                Margin="0,0,0,10"
                 SelectedIndex="0"
                 SelectionChanged="GapChanged"
-                IsEnabled="False"/>
+                x:Name="gaps" />
             <Button
-                x:Name="pickShortButton"
-                Grid.Row="1"
-                Width="150"
-                Height="50"
-                Margin="0,0,0,10"
-                HorizontalAlignment="Left"
-                VerticalAlignment="Top"
                 Click="PickShortClick"
                 Content="保留切错长图并获取短图"
-                IsEnabled="False" />
-            <Button
-                x:Name="ftpUploadButton"
                 Grid.Row="1"
-                Width="150"
                 Height="50"
-                Margin="0,0,0,10"
                 HorizontalAlignment="Left"
+                IsEnabled="False"
+                Margin="0,0,0,10"
                 VerticalAlignment="Top"
+                Width="150"
+                x:Name="pickShortButton" />
+            <Button
                 Click="FtpUploadClick"
                 Content="FTP上传软件错误短图"
-                IsEnabled="True" />
-            <Button
-                x:Name="CleanButton"
                 Grid.Row="1"
-                Width="150"
                 Height="50"
                 HorizontalAlignment="Left"
+                IsEnabled="True"
+                Margin="0,0,0,10"
                 VerticalAlignment="Top"
+                Width="150"
+                x:Name="ftpUploadButton" />
+            <Button
                 Background="Chartreuse"
                 Click="CleanClick"
                 Content="清理无关文件"
-                IsEnabled="True" />
+                Grid.Row="1"
+                Height="50"
+                HorizontalAlignment="Left"
+                IsEnabled="True"
+                VerticalAlignment="Top"
+                Width="150"
+                x:Name="CleanButton" />
         </StackPanel>
 
         <TextBox
-            x:Name="myConsole"
-            Grid.RowSpan="5"
-            
-            Grid.Column="1"
-            Grid.ColumnSpan="6"
-            Width="Auto"
             AcceptsReturn="True"
             AcceptsTab="True"
             Background="White"
             FontFamily="Consolas"
             FontSize="14"
             Foreground="Black"
+            Grid.Column="1"
+            Grid.ColumnSpan="6"
+            Grid.RowSpan="5"
             HorizontalScrollBarVisibility="Auto"
             IsReadOnly="True"
+            Margin="5"
             TextWrapping="NoWrap"
-            VerticalScrollBarVisibility="Auto" 
-            Margin="5"/>
+            VerticalScrollBarVisibility="Auto"
+            Width="Auto"
+            x:Name="myConsole" />
 
 
     </Grid>
