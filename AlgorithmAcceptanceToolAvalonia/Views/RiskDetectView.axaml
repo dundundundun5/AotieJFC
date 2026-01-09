@@ -1,5 +1,6 @@
-﻿<sukiUi:SukiWindow
+<sukiUi:SukiWindow
     CanResize="False"
+    Closing="Onclose"
     Height="800"
     Title="异常检测"
     Width="1500"
@@ -24,13 +25,21 @@
         <KeyBinding Command="{Binding NextJpgCommand}" Gesture="Down" />
         <KeyBinding Command="{Binding PreviousJpgCommand}" Gesture="Left" />
         <KeyBinding Command="{Binding PreviousJpgCommand}" Gesture="Up" />
-        <KeyBinding Command="{Binding MarkErrorCommand}" Gesture="Space" />
-        <KeyBinding Command="{Binding MarkErrorCommand}" Gesture="Enter" />
+        <KeyBinding
+            Command="{Binding MarkErrorCommand}"
+            CommandParameter="true"
+            Gesture="E" />
+        <KeyBinding
+            Command="{Binding MarkErrorCommand}"
+            CommandParameter="false"
+            Gesture="F" />
     </Window.KeyBindings>
+
+
     <Grid
         ColumnDefinitions="400, *"
         RenderOptions.BitmapInterpolationMode="HighQuality"
-        RowDefinitions="50,50,250,300,50,*">
+        RowDefinitions="50,50,50,200,300,50,*">
         <StackPanel
             Grid.Column="0"
             Grid.Row="0"
@@ -67,13 +76,28 @@
                 Margin="5"
                 SelectedItem="{Binding SelectedTaskName}"
                 VerticalAlignment="Center" />
+            <CheckBox
+                Content="裁剪至目标框"
+                IsChecked="{Binding CropImage}"
+                IsEnabled="{Binding !IsAnalyzing}"
+                Margin="5"
+                Width="120" />
+
+        </StackPanel>
+        <StackPanel
+            Grid.Column="0"
+            Grid.Row="2"
+            Margin="5"
+            Orientation="Horizontal">
+            <TextBlock Text="操作：" VerticalAlignment="Center" />
+
+
             <Button
                 Command="{Binding AnalyzeRisksCommand}"
                 Content="开始分析"
                 Height="40"
                 Margin="5" />
         </StackPanel>
-
         <DataGrid
             BorderBrush="Gray"
             BorderThickness="1"
@@ -82,7 +106,7 @@
             CanUserSortColumns="False"
             Grid.Column="1"
             Grid.Row="0"
-            Grid.RowSpan="3"
+            Grid.RowSpan="4"
             GridLinesVisibility="None"
             IsEnabled="{Binding !IsAnalyzing}"
             IsReadOnly="True"
@@ -119,34 +143,49 @@
         <Image
             Grid.Column="0"
             Grid.ColumnSpan="2"
-            Grid.Row="3"
+            Grid.Row="4"
             Source="{Binding PresentImage}"
             Stretch="Fill" />
         <StackPanel
             Grid.Column="0"
             Grid.ColumnSpan="2"
-            Grid.Row="4"
+            Grid.Row="5"
             HorizontalAlignment="Center"
             Orientation="Horizontal">
 
             <Button
-                Classes="Rounded"
+                Classes="Standard"
                 Command="{Binding PreviousJpgCommand}"
-                Content="上一张"
+                Content="上一张（方向键上或左）"
                 Margin="0,10,10,0"
-                Width="400" />
+                Width="250" />
             <Button
-                Classes="Rounded"
+                Classes="Standard"
                 Command="{Binding NextJpgCommand}"
-                Content="下一张"
+                Content="下一张（方向键下或右）"
                 Margin="0,10,10,0"
-                Width="400" />
+                Width="250" />
             <Button
-                Classes="Outlined"
+                Classes="Outlined Danger"
                 Command="{Binding MarkErrorCommand}"
-                Content="标记错误"
+                CommandParameter="true"
+                Content="标记异常（E）"
                 Margin="0,10,0,0"
-                Width="300" />
+                Width="250" />
+            <Button
+                Classes="Outlined Success"
+                Command="{Binding MarkErrorCommand}"
+                CommandParameter="false"
+                Content="标记误检（F）"
+                Margin="10,10,0,0"
+                Width="250" />
+            <Button
+                Classes="Outlined Information"
+                Command="{Binding MarkErrorCommand}"
+                CommandParameter="false"
+                Content="撤销标记（Ctrl+Z）"
+                Margin="10,10,0,0"
+                Width="200" />
         </StackPanel>
 
     </Grid>

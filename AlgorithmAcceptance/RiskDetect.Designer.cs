@@ -1,4 +1,4 @@
-﻿namespace AlgorithmAcceptanceTool
+namespace AlgorithmAcceptanceTool
 {
     partial class RiskDetect
     {

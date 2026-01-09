@@ -39,5 +39,9 @@ public partial class RiskDetectView : SukiWindow
         _viewModel.ImagePath = res;
     }
 
-   
+
+    private void Onclose(object? sender, WindowClosingEventArgs e)
+    {
+        _viewModel.AnalyzeRisksCancelCommand?.Execute(null);
+    }
 }

@@ -13,6 +13,7 @@ using SixLabors.ImageSharp.Drawing;
 using SixLabors.ImageSharp.Drawing.Processing;
 using SixLabors.ImageSharp.PixelFormats;
 using SixLabors.ImageSharp.Processing;
+using Path = System.IO.Path;
 
 namespace AlgoritmAcceptanceToolAvalonia.Utils;
 
@@ -30,7 +31,7 @@ public static class ImageUtil
         
     }
 
-    public static async Task Drawing(FileStream imageSteam, string resultPath,AlgorithmResponse response)
+    public static async Task Drawing(FileStream imageSteam, string resultJpgPath,AlgorithmResponse response, bool cropImage, string? cropPath=null)
     {
         // 将 FileStream 转换为字节数组
         byte[] bytes;
@@ -51,10 +52,25 @@ public static class ImageUtil
             var y1 = (int)defect.TopLeft.Y;
             var y2 = (int)defect.BottomRight.Y;
             var rect = new RectangularPolygon(x1, y1, x2 - x1, y2 - y1);
+            var l = defect.DefectType;
+            var s = defect.DefectScore;
+            var a = defect.DefectArea;
+            var v = defect.DefectValue;
+            var fileName = Path.GetFileName(resultJpgPath);
+            if (cropImage)
+            {
+                var newImage = image.Clone();
+                newImage.Mutate(img => img.Crop(new Rectangle(x1, y1, x2-x1, y2-y1)));
+                var newCropName = $"{fileName.Replace(".jpg", "").Replace("_", "+")}-{l.ToUpper()}-{x1}-{y1}-{x2}-{y2}-{s}-{a}-{v}.jpg";
+                await newImage.SaveAsync(Path.Join(cropPath, newCropName));
+            }
+            
+            
             var redPen = Pens.Solid(SixLabors.ImageSharp.Color.Red, 5); // 5px stroke width
             image.Mutate(x => x.Draw(redPen, rect));
+            
         }
-        await image.SaveAsync(resultPath);
+        await image.SaveAsync(resultJpgPath);
     }
     
 }
