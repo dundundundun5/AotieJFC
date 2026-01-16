@@ -1,9 +1,9 @@
 using System;
+using AlgorithmAcceptanceToolAvalonia.ViewModels;
 using Avalonia.Controls;
 using Avalonia.Controls.Templates;
-using AlgoritmAcceptanceToolAvalonia.ViewModels;
 
-namespace AlgoritmAcceptanceToolAvalonia;
+namespace AlgorithmAcceptanceToolAvalonia;
 
 public class ViewLocator : IDataTemplate
 {

@@ -4,26 +4,27 @@ using System.Linq;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using System.Threading.Tasks;
-using AlgoritmAcceptanceToolAvalonia.Models;
-using AlgoritmAcceptanceToolAvalonia.Models.Enums;
-using AlgoritmAcceptanceToolAvalonia.Models.Responses;
+using AlgorithmAcceptanceToolAvalonia.Models;
+using AlgorithmAcceptanceToolAvalonia.Models.Entities;
+using AlgorithmAcceptanceToolAvalonia.Models.Enums;
+using AlgorithmAcceptanceToolAvalonia.Models.Responses;
 using Avalonia.Media;
 
-namespace AlgoritmAcceptanceToolAvalonia.Converters;
+namespace AlgorithmAcceptanceToolAvalonia.Converters;
 
 public class ResponseConverter
 {
     
-    public static RiskDetectResult FromResponse(HttpResponse<AlgorithmResponse>? httpResponse, string filePath, string? trueLabel)
+    public static RiskDetectResult FromResponse(HttpResponse<AlgorithmResponse>? httpResponse, string filePath, string? guessedLabel, string taskName)
     {
         
         string temp;
-        if (trueLabel == null)
+        if (guessedLabel == null)
             temp = nameof(EnumLabelStatus.无标注文件);
-        else if (trueLabel == string.Empty)
+        else if (guessedLabel == string.Empty)
             temp = nameof(EnumLabelStatus.无目标);
         else
-            temp = trueLabel;
+            temp = guessedLabel;
         
         var fileName = Path.GetFileName(filePath);
         
@@ -32,10 +33,11 @@ public class ResponseConverter
         {
             return  new RiskDetectResult()
             {
+                TaskName = taskName,
                 RawResult = ToJson(httpResponse),
                 FileName = fileName,
                 PredictLabel = "",
-                TrueLabel = temp,
+                GuessedLabel = temp,
                 PredictScore = "",
                 Timestamp = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")
             };
@@ -47,10 +49,11 @@ public class ResponseConverter
         
         RiskDetectResult result = new()
         {
+            TaskName = taskName,
             RawResult = ToJson(httpResponse),
             FileName = fileName,
             PredictLabel = string.Join("-", predictLabelList),
-            TrueLabel = temp,
+            GuessedLabel = temp,
             PredictScore = string.Join("-", predictScoreList),
             Timestamp = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")
         };

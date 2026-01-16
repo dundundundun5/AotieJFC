@@ -1,7 +1,7 @@
 ﻿using Avalonia;
 using System;
 
-namespace AlgoritmAcceptanceToolAvalonia;
+namespace AlgorithmAcceptanceToolAvalonia;
 
 sealed class Program
 {

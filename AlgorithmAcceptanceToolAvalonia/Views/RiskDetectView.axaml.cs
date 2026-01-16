@@ -1,14 +1,15 @@
 ﻿using System.Linq;
 using System.Threading.Tasks;
-using AlgoritmAcceptanceToolAvalonia.ViewModels;
+using AlgorithmAcceptanceToolAvalonia.ViewModels;
 using Avalonia;
 using Avalonia.Controls;
+using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.Markup.Xaml;
 using Avalonia.Platform.Storage;
 using SukiUI.Controls;
 
-namespace AlgoritmAcceptanceToolAvalonia.Views;
+namespace AlgorithmAcceptanceToolAvalonia.Views;
 
 public partial class RiskDetectView : SukiWindow
 {
@@ -43,5 +44,15 @@ public partial class RiskDetectView : SukiWindow
     private void Onclose(object? sender, WindowClosingEventArgs e)
     {
         _viewModel.AnalyzeRisksCancelCommand?.Execute(null);
+    }
+    
+
+    private void OnKeyDown(object? sender, KeyEventArgs e)
+    {
+        if (e.Key == Key.Z)
+        {
+            var fullScreen = new FullScreenImageView(_viewModel.PresentImage);
+            fullScreen.Show(this);
+        }
     }
 }

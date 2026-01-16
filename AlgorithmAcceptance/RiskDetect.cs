@@ -13,6 +13,7 @@ using Newtonsoft.Json;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.Drawing;
 using SixLabors.ImageSharp.Drawing.Processing;
+using SixLabors.ImageSharp.Formats.Jpeg;
 using SixLabors.ImageSharp.PixelFormats;
 using SixLabors.ImageSharp.Processing;
 using CheckBox = System.Windows.Controls.CheckBox;
@@ -30,6 +31,7 @@ namespace AlgorithmAcceptanceTool
         private Dictionary<string, string> dict = new Dictionary<string, string>();
         private BackgroundWorker worker;
         private List<double> DefectScores { get; set; } = [];
+        private List<bool> DefectBool { get; set; } = [];
         private string PresentTaskName { get; set; } = "LOAD";
         private (string, string) StationNApi { get; set; }
         private string _cropPath = string.Empty;
@@ -40,6 +42,12 @@ namespace AlgorithmAcceptanceTool
 
         private int bias = 0;
         private bool _cropImages = false;
+
+        private bool _cropBlank = false,
+            _cropBlank2 = false;
+        private string _brightness = "1.00";
+        private bool _noSave = false;
+        private int total = 0;
         public RiskDetect()
         {
             InitializeComponent();
@@ -155,6 +163,7 @@ namespace AlgorithmAcceptanceTool
                 var param = e.Argument as WorkerParam;
                 var imgArrayList = ImgUtils.GetImgCollection(param.SourcePath);
                 var totalCount = imgArrayList.Count;
+                total = imgArrayList.Count;
                 var counter = 1;
                 foreach (var imgPath in imgArrayList)
                 {
@@ -164,34 +173,38 @@ namespace AlgorithmAcceptanceTool
                     counter++;
                     try
                     {
-                        if (PresentTaskName == "LEFT")
-                        {
-                            (bool, string) res1 = analysis_image(param.DestPath, imgPath, fileName, "LOAD");
-                            (bool, string) res2 = analysis_image(param.DestPath, imgPath, fileName, "LEFT");
-                            if (res1.Item1 && res2.Item1)
-                            {
-                                bias++;
-                                File.Delete(res2.Item2);
-
-                            }
-
-                            else if (res1.Item1 && !res2.Item1)
-                            {
-                                File.Delete(res2.Item2);
-
-                            }
-
-                            else if (!res1.Item1 && res2.Item1)
-                            {
-                                File.Delete(res1.Item2);
-
-                            }
-
-                        }
-                        else
-                        {
-                            analysis_image(param.DestPath, imgPath, fileName, PresentTaskName);
-                        }
+                        // if (PresentTaskName == "LEFT")
+                        // {
+                        //     (bool, string) res1 = analysis_image(param.DestPath, imgPath, fileName, "LOAD");
+                        //     (bool, string) res2 = analysis_image(param.DestPath, imgPath, fileName, "LEFT");
+                        //     if (!_noSave)
+                        //     {
+                        //         if (res1.Item1 && res2.Item1)
+                        //         {
+                        //             bias++;
+                        //             File.Delete(res2.Item2);
+                        //
+                        //         }
+                        //
+                        //         else if (res1.Item1 && !res2.Item1)
+                        //         {
+                        //             File.Delete(res2.Item2);
+                        //
+                        //         }
+                        //
+                        //         else if (!res1.Item1 && res2.Item1)
+                        //         {
+                        //             File.Delete(res1.Item2);
+                        //
+                        //         }
+                        //     }
+                        //     
+                        //
+                        // }
+                        // else
+                        // {
+                        analysis_image(param.DestPath, imgPath, fileName, PresentTaskName);
+                        // }
 
                     }
                     catch (System.Exception ex)
@@ -350,7 +363,8 @@ namespace AlgorithmAcceptanceTool
             {
                 double min = DefectScores.Min(), max = DefectScores.Max(), mean = DefectScores.Average();
                 append_log(
-                    $"分数最小值={min * 100:F}, 分数最大值={max * 100:F}, 分数平均值={mean * 100:F1}, 准确率={DefectScores.Count - bias}/{imgArray.Count}*100%={1.0 * (DefectScores.Count - bias) / imgArray.Count * 100:F2}%{Environment.NewLine}");
+                    $"准确率={DefectScores.Count - bias}/{total}{Environment.NewLine}");
+                append_log($"[{string.Join(",",DefectBool).ToLower()}]{Environment.NewLine}");
             }
             catch (Exception e)
             {
@@ -396,7 +410,7 @@ namespace AlgorithmAcceptanceTool
         }
         
 
-        private (bool, string) analysis_image(string destPath, string imgPath, string fileName, string taskName)
+        private void analysis_image(string destPath, string imgPath, string fileName, string taskName)
         {
 
             // /**
@@ -409,6 +423,41 @@ namespace AlgorithmAcceptanceTool
             Byte[] bytes = new Byte[fs.Length];
             fs.Read(bytes, 0, (int)fs.Length);
             fs.Close();
+            
+            var tempImage = SixLabors.ImageSharp.Image.Load<Rgba32>(bytes);
+            if (_cropBlank)
+            {
+                var croppedHeight = tempImage.Height;
+                var croppedWidth = tempImage.Width - tempImage.Height;
+                tempImage.Mutate(img =>
+                {
+                    img.Crop(new Rectangle(0, 0, croppedWidth, croppedHeight));
+                });
+            } else if (_cropBlank2)
+            {
+                var croppedHeight = tempImage.Height;
+                var croppedWidth = tempImage.Width - tempImage.Height * 2;
+                tempImage.Mutate(img =>
+                {
+                    img.Crop(new Rectangle(0, 0, croppedWidth, croppedHeight));
+                });
+            }
+            else
+            {
+                
+                tempImage.Mutate(img =>
+                {
+                    float newBrightness = float.Parse(_brightness);
+                    img.Brightness(newBrightness);
+                });
+            }
+            // 将裁剪后的图片保存到内存流中，然后获取JPEG格式的字节数据
+            using (var memoryStream = new MemoryStream())
+            {
+                tempImage.Save(memoryStream, new JpegEncoder());
+                bytes = memoryStream.ToArray();
+            }
+            
 
             // 添加文件
             form.AddStreamFile("image_file", fileName, bytes);
@@ -487,16 +536,20 @@ namespace AlgorithmAcceptanceTool
                     append_log(
                         $"- {taskName} -> {fileName} -> 标签={label}, 亮度={defectValue}, 分数={defectScore * 100:F2}{Environment.NewLine}");
                     DefectScores.Add(defectScore);
+                    DefectBool.Add(true);
                     flag = true;
                 }
 
                 else if (label == "没检测到")
                 {
+                    DefectScores.Add(-1d);
+                    DefectBool.Add(false);
                     append_log($"- {taskName} -> {fileName} -> {content}{Environment.NewLine}");
                 }
                 else
                 {
                     DefectScores.Add(defectScore);
+                    DefectBool.Add(true);
                     append_log(
                         $"- {taskName} -> {fileName} -> 标签={label}, 分数={defectScore * 100:F2}{Environment.NewLine}");
                     flag = true;
@@ -512,14 +565,17 @@ namespace AlgorithmAcceptanceTool
             }
 
             // string newName = $"{taskName}_{label}_{fileName}";
-            string newName = $"{label}_{defectScore}_{fileName}";
-            string filePath = Path.Combine(destPath, newName);
-            image.Save(filePath);
-            dict[newName] = fileName;
+            string filePath = destPath;
+            if (!_noSave)
+            {
+                string newName = $"{label}_{defectScore}_{fileName}";
+                filePath = Path.Combine(destPath, newName);
+                image.Save(filePath);
+                dict[newName] = fileName;
+            }
+             
             streamReader.Close();
             response.Close();
-            return (flag, filePath);
-
         }
 
         private void btnSelectPath_Click(object sender, EventArgs e)
@@ -576,7 +632,30 @@ namespace AlgorithmAcceptanceTool
             _cropImages = checkbox.Checked;
         }
 
-        
+
+        private void checkBox2_CheckedChanged(object sender, EventArgs e)
+        {
+            var checkbox = (System.Windows.Forms.CheckBox)sender;
+            _cropBlank = checkbox.Checked;
+        }
+
+        private void checkBox3_CheckedChanged(object sender, EventArgs e)
+        {
+            var checkbox = (System.Windows.Forms.CheckBox)sender;
+            _noSave = checkbox.Checked;
+        }
+
+        private void comboBox2_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            var cb = (System.Windows.Forms.ComboBox)sender;
+            _brightness = (string)cb.SelectedItem;
+        }
+
+        private void checkBox4_CheckedChanged(object sender, EventArgs e)
+        {
+            var checkbox = (System.Windows.Forms.CheckBox)sender;
+            _cropBlank2= checkbox.Checked;
+        }
     }
 }
     

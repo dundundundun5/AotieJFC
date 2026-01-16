@@ -1,4 +1,4 @@
-namespace AlgoritmAcceptanceToolAvalonia.Models.Enums;
+namespace AlgorithmAcceptanceToolAvalonia.Models.Enums;
 
 public enum EnumFolder
 {

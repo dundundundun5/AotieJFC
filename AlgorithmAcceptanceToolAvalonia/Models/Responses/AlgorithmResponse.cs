@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 
-namespace AlgoritmAcceptanceToolAvalonia.Models.Responses;
+namespace AlgorithmAcceptanceToolAvalonia.Models.Responses;
 
 public class AlgorithmResponse
 {

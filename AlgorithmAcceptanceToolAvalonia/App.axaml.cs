@@ -5,14 +5,14 @@ using Avalonia.Data.Core;
 using Avalonia.Data.Core.Plugins;
 using System.Linq;
 using System.Threading.Tasks;
+using AlgorithmAcceptanceToolAvalonia.Views;
 using Avalonia.Markup.Xaml;
-using AlgoritmAcceptanceToolAvalonia.ViewModels;
-using AlgoritmAcceptanceToolAvalonia.Views;
+using AlgorithmAcceptanceToolAvalonia.ViewModels;
 using Avalonia.Threading;
 using Microsoft.Extensions.Configuration;
 using Serilog;
 
-namespace AlgoritmAcceptanceToolAvalonia;
+namespace AlgorithmAcceptanceToolAvalonia;
 
 public partial class App : Application
 {

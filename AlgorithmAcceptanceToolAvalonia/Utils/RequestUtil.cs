@@ -2,13 +2,13 @@
 using System.IO;
 using System.Net;
 using System.Threading.Tasks;
-using AlgoritmAcceptanceToolAvalonia.Converters;
-using AlgoritmAcceptanceToolAvalonia.Models;
-using AlgoritmAcceptanceToolAvalonia.Models.Responses;
+using AlgorithmAcceptanceToolAvalonia.Models;
+using AlgorithmAcceptanceToolAvalonia.Models.Responses;
+using AlgorithmAcceptanceToolAvalonia.Converters;
 using Flurl.Http;
 using Flurl.Http.Content;
 
-namespace AlgoritmAcceptanceToolAvalonia.Utils;
+namespace AlgorithmAcceptanceToolAvalonia.Utils;
 
 public static class RequestUtil
 {

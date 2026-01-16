@@ -4,8 +4,8 @@ using System.IO;
 using System.Linq;
 using System.Text.Json.Nodes;
 using System.Threading.Tasks;
-using AlgoritmAcceptanceToolAvalonia.Models.Enums;
-using AlgoritmAcceptanceToolAvalonia.Models.Responses;
+using AlgorithmAcceptanceToolAvalonia.Models.Responses;
+using AlgorithmAcceptanceToolAvalonia.Models.Enums;
 using Avalonia.Media.Imaging;
 using Serilog;
 using SixLabors.ImageSharp;
@@ -15,7 +15,7 @@ using SixLabors.ImageSharp.PixelFormats;
 using SixLabors.ImageSharp.Processing;
 using Path = System.IO.Path;
 
-namespace AlgoritmAcceptanceToolAvalonia.Utils;
+namespace AlgorithmAcceptanceToolAvalonia.Utils;
 
 public static class ImageUtil
 {
@@ -27,7 +27,7 @@ public static class ImageUtil
 
     public static List<string> GetAllJpgPath(string rootPath)
     {
-        return Directory.GetFiles(rootPath, "*.jpg", SearchOption.AllDirectories).ToList();
+        return Directory.GetFiles(rootPath, "*.jpg", SearchOption.TopDirectoryOnly).ToList();
         
     }
 
@@ -61,7 +61,10 @@ public static class ImageUtil
             {
                 var newImage = image.Clone();
                 newImage.Mutate(img => img.Crop(new Rectangle(x1, y1, x2-x1, y2-y1)));
-                var newCropName = $"{fileName.Replace(".jpg", "").Replace("_", "+")}-{l.ToUpper()}-{x1}-{y1}-{x2}-{y2}-{s}-{a}-{v}.jpg";
+                var newCropName = $"{fileName.Replace(".jpg", "").Replace("_", "+").Split("+")[^1]}-{l.ToUpper()}-{x1}-{y1}-{x2}-{y2}-{s}-{a}-{v}.jpg";
+                cropPath = Path.Join(cropPath, l.ToUpper());
+                if (!Directory.Exists(cropPath))
+                    Directory.CreateDirectory(cropPath);
                 await newImage.SaveAsync(Path.Join(cropPath, newCropName));
             }
             
@@ -69,7 +72,9 @@ public static class ImageUtil
             var redPen = Pens.Solid(SixLabors.ImageSharp.Color.Red, 5); // 5px stroke width
             image.Mutate(x => x.Draw(redPen, rect));
             
+            
         }
+        image.Mutate(x => x.Brightness(1.25f));
         await image.SaveAsync(resultJpgPath);
     }
     

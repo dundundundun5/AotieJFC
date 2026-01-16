@@ -1,4 +1,4 @@
-﻿namespace AlgoritmAcceptanceToolAvalonia.Models;
+﻿namespace AlgorithmAcceptanceToolAvalonia.Models.Enums;
 
 public enum EnumTaskName
 {

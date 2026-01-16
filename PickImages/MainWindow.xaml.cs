@@ -1,15 +1,9 @@
-﻿using Microsoft.Win32;
-using System.Diagnostics;
-using System.DirectoryServices.ActiveDirectory;
-using System.Formats.Tar;
 using System.IO;
-using System.Printing;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Threading;
-using PickImagesTool;
 using Path = System.IO.Path;
-namespace PickImages;
+namespace PickImagesTool;
 
 /// <summary>
 /// Interaction logic for MainWindow.xaml
@@ -23,6 +17,8 @@ public partial class MainWindow : Window
     private string?  _presentStation;
     private const string DetectCsFolder = "车身误检测", DetectZxFolder = "走行误检测", DetectManulFolder = "manual_error", ScoreFolder = "score";
     private DispatcherTimer? _inactivityTimer;
+    private DispatcherTimer? _dailyTimer;
+    private DateTime? _lastExecutionDate;
     private static DateTime _today = DateTime.Now;
     private static bool initializing = true;
     private static DateTime _yesterday = DateTime.Now.AddDays(-1);
@@ -31,6 +27,7 @@ public partial class MainWindow : Window
     private static DateTime __yyyyesterday = DateTime.Now.AddDays(-4);
     private DateTime _presentDate = _yesterday;
     public DateTime[] DateList { get; set; } = [_today, _yesterday, __yyesterday, __yyyesterday, __yyyyesterday];
+    private int cnt = 0;
     private readonly string[] _warningLabels =
     [
         "JGQ",
@@ -106,12 +103,28 @@ public partial class MainWindow : Window
     ];
     public MainWindow()
     {
-        
         InitializeComponent();
         c2t = new Console2Textbox(myConsole);
         Console.WriteLine($"误检测检查日期：{_presentDate:yyyy-MM-dd}");
         CheckIfExists();
-        StartInactivityTimer(seconds: 60);
+        InitializeDailyTimer();
+    }
+
+    private void InitializeDailyTimer()
+    {
+        _dailyTimer = new DispatcherTimer();
+        // 从程序启动时间开始计算1天采集一次昨天的告警
+        _dailyTimer.Interval = TimeSpan.FromDays(1);
+        _dailyTimer.Tick += ((sender, args) =>
+        {
+            if (cnt == 20)
+                return;
+            _presentDate = DateTime.Now.AddDays(-1);
+            // 收集一次告警
+            GatherWarningClick(null, null);
+            cnt++;
+        });
+        _dailyTimer.Start();
     }
     private void CheckIfExists() {
         string desktopPath;
@@ -144,16 +157,7 @@ public partial class MainWindow : Window
         //    
         //
         // }
-        foreach (string desktopFile in Directory.GetDirectories(desktopPath)) {
-            if (String.Compare(desktopFile.Split("\\")[^1], DetectCsFolder, StringComparison.Ordinal) == 0) {
-                DetectCSFolder.Text = desktopFile;
-                DetectCSButton.Content = "寻找原图";
-            }
-            if (String.Compare(desktopFile.Split("\\")[^1], DetectZxFolder, StringComparison.Ordinal) == 0) {
-                DetectZXFolder.Text = desktopFile;
-                DetectZXButton.Content = "寻找原图";
-            }
-        }
+       
 
     }
     private void AsyncWrite(TextBox box, string text) {
@@ -164,18 +168,18 @@ public partial class MainWindow : Window
         Action<TextBox, string> updateAction = new Action<TextBox, string>(Write);
         box.Dispatcher.BeginInvoke(updateAction, box, text);
     }
-    private void StartInactivityTimer(int seconds) {
-        _inactivityTimer = new DispatcherTimer {
-            Interval = TimeSpan.FromSeconds(seconds) // 15秒无操作后触发
-        };
-        _inactivityTimer.Tick += (s, e) => CloseApplication();
-        _inactivityTimer.Start();
-
-        // 监听所有可能的用户输入事件
-        PreviewMouseMove += ResetTimerOnActivity;
-        PreviewKeyDown += ResetTimerOnActivity;
-        PreviewTouchDown += ResetTimerOnActivity;
-    }
+    // private void StartInactivityTimer(int seconds) {
+    //     _inactivityTimer = new DispatcherTimer {
+    //         Interval = TimeSpan.FromSeconds(seconds) // 15秒无操作后触发
+    //     };
+    //     _inactivityTimer.Tick += (s, e) => CloseApplication();
+    //     _inactivityTimer.Start();
+    //
+    //     // 监听所有可能的用户输入事件
+    //     PreviewMouseMove += ResetTimerOnActivity;
+    //     PreviewKeyDown += ResetTimerOnActivity;
+    //     PreviewTouchDown += ResetTimerOnActivity;
+    // }
     // 用户有操作时重置计时器
     private void ResetTimerOnActivity(object sender, EventArgs e) {
         _inactivityTimer.Stop();
@@ -186,105 +190,8 @@ public partial class MainWindow : Window
         _inactivityTimer.Stop();
         Application.Current.Shutdown();
     }
-    private async void OCRButton1_Click(object sender, RoutedEventArgs e) {
-        if (OCRFile1.Text.Contains($"选择站点名_日期XXX.csv")) {
-            OpenFileDialog openFileDialog = new OpenFileDialog();
-            openFileDialog.Filter = "逗号分隔文件 (*.csv)|*.csv";
-            if (openFileDialog.ShowDialog() == true) {
-                OCRFile1.Text = openFileDialog.FileName;
-                AsyncWrite(c2t.box, $"目标文件 -> {OCRFile1.Text}\n");
-            }
-        }
-        string txtFile = OCRFile1.Text;
-        string finalFolder = Path.GetDirectoryName(txtFile);
-        string name = txtFile.Split("\\")[^1].Split(".")[0];
-        string ocrPath = Path.Join(finalFolder, name);
-
-        if (!Directory.Exists(ocrPath))
-            Directory.CreateDirectory(ocrPath);
-        if (OCRFile1.Text.Contains($"选择站点名_日期XXX.csv")) {
-            Console.WriteLine("您未选择任何文件，必须选择一个文件");
-            return; 
-        }
-        string[] ocrFiles = File.ReadAllLines(txtFile)[1..];
-        OCRButton1.IsEnabled = false;
-        await Task.Run(() => {
-            // 这里执行长时间运行的操作
-            //print();
-            try {
-                // 可能会抛出异常的代码
-                OcrPickLongImage(csvRows: ocrFiles, finalPath: ocrPath);
-            }
-            catch (Exception ex) {
-                // 显示异常信息
-                AsyncWrite(c2t.box, $"{ex.ToString()}");
-                return;
-            }
-        });
-        StartInactivityTimer(3);
-    }
-    private async void DetectCSButton_Click(object sender, RoutedEventArgs e) {
-        if (DetectCSFolder.Text.Contains($"选择{DetectCsFolder}")) {
-            OpenFolderDialog openFolderDialog = new OpenFolderDialog();
-            if (openFolderDialog.ShowDialog() == true) {
-                DetectCSFolder.Text = openFolderDialog.FolderName;
-                AsyncWrite(c2t.box, $"目标文件夹 -> {DetectCSFolder.Text}\n");
-            }
-        }
-        string path = DetectCSFolder.Text; // 获取路径
-        string[] filenames = Directory.GetFiles(path, searchPattern: "*.jpg");
-        string detectPath = Path.Join(path, "原图");
-        if (!Directory.Exists(detectPath)) 
-            Directory.CreateDirectory(detectPath);
-        DetectCSButton.IsEnabled = false;
-        await Task.Run(() => {
-            // 这里执行长时间运行的操作
-            //print();
-            try {
-                // 可能会抛出异常的代码
-                PickLongImage(filenames: filenames, finalPath: detectPath);
-                //PickLongImage(filenames: filenames, finalPath: detectPath, trainType:"cs-y");
-            }
-            catch (Exception ex) {
-                // 显示异常信息
-
-                AsyncWrite(c2t.box, $"{ex.ToString()}");
-                return;
-            }
-        });
-
-    }
-    private async void DetectZXButton_Click(object sender, RoutedEventArgs e) {
-        if (DetectZXFolder.Text.Contains($"选择{DetectZxFolder}")) {
-            OpenFolderDialog openFolderDialog = new OpenFolderDialog();
-            if (openFolderDialog.ShowDialog() == true) {
-                DetectZXFolder.Text = openFolderDialog.FolderName;
-                AsyncWrite(c2t.box, $"目标文件夹 -> {DetectZXFolder.Text}\n");
-            }
-        }
-
-        string path = DetectZXFolder.Text; // 获取路径
-        string[] filenames = Directory.GetFiles(path, searchPattern: "*.jpg");
-        string detectPath = Path.Join(path, "原图");
-        if (!Directory.Exists(detectPath))
-            Directory.CreateDirectory(detectPath);
-        DetectZXButton.IsEnabled = false;
-        await Task.Run(() => {
-            // 这里执行长时间运行的操作
-            //print();
-            try {
-                // 可能会抛出异常的代码
-                PickLongImage(filenames: filenames, finalPath: detectPath, trainType:"zx-z");
-                //PickLongImage(filenames: filenames, finalPath: detectPath, trainType: "zx-y");
-            }
-            catch (Exception ex) {
-                // 显示异常信息
-
-                AsyncWrite(c2t.box, $"{ex.ToString()}");
-                return;
-            }
-        });
-    }
+    
+    
     private void PickLongImage(string[] filenames, string finalPath, string trainType="cs-z") {
         AsyncWrite(c2t.box, $"===========寻找类型：{trainType.ToUpper()}===========\n");
         foreach (string f in filenames) {
@@ -328,7 +235,7 @@ public partial class MainWindow : Window
     }
     private async void GatherWarningClick(object sender, RoutedEventArgs e)
     {
-        GatherWarningButton.IsEnabled = false;
+        
         await Task.Run(() =>
         {
             try
@@ -343,7 +250,7 @@ public partial class MainWindow : Window
                 AsyncWrite(c2t.box, $"{exception.ToString()}\n");
             }
         });
-        StartInactivityTimer(seconds:2);
+      
 
     }
     private void GatherWarning()
@@ -427,7 +334,7 @@ public partial class MainWindow : Window
     }
     private async void FtpClick(object sender, RoutedEventArgs e)
     {
-        FtpButton.IsEnabled = false;
+        
         await Task.Run(() =>
         {
             try
@@ -440,7 +347,7 @@ public partial class MainWindow : Window
                 AsyncWrite(c2t.box, exception.ToString());
             }
         });
-        StartInactivityTimer(seconds:2);
+       
     }
     private void FtpUploadWarning()
     {
@@ -484,6 +391,7 @@ public partial class MainWindow : Window
         if (Directory.Exists(resultPath))
             Directory.Delete(resultPath, true);
         Directory.CreateDirectory(resultPath);
+        
         string filePath = @"D:\warning.txt";
         if (!File.Exists(filePath))
         {
@@ -531,13 +439,12 @@ public partial class MainWindow : Window
         _presentDate = (DateTime)t;
         Console.WriteLine($"测试日期 -> {_presentDate:yyyy-MM-dd}");
         GatherWarningButton.IsEnabled = true;
-        PickWarningButton.IsEnabled = false;
+        
     }
 
     private async void PickWarningButton_OnClick(object sender, RoutedEventArgs e)
     {
         
-        PickWarningButton.IsEnabled = false;
         await Task.Run(() =>
         {
             try

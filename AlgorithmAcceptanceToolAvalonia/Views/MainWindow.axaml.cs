@@ -1,11 +1,11 @@
 using System;
-using AlgoritmAcceptanceToolAvalonia.ViewModels;
+using AlgorithmAcceptanceToolAvalonia.ViewModels;
 using Avalonia.Controls;
 using Avalonia.Interactivity;
 using Avalonia.Threading;
 using SukiUI.Controls;
 
-namespace AlgoritmAcceptanceToolAvalonia.Views;
+namespace AlgorithmAcceptanceToolAvalonia.Views;
 
 public partial class MainWindow : SukiWindow
 {

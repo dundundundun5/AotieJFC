@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace AlgoritmAcceptanceToolAvalonia.Models;
+﻿namespace AlgorithmAcceptanceToolAvalonia.Models.Responses;
 
 public class HttpResponse<T>
 {

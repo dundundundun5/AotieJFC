@@ -2,7 +2,7 @@ using System;
 using CommunityToolkit.Mvvm.ComponentModel;
 using Microsoft.Extensions.Configuration;
 
-namespace AlgoritmAcceptanceToolAvalonia.ViewModels;
+namespace AlgorithmAcceptanceToolAvalonia.ViewModels;
 
 public class ViewModelBase : ObservableObject
 {

@@ -6,10 +6,13 @@ using System.Text.Json.Nodes;
 using System.Threading.Tasks;
 using Serilog;
 
-namespace AlgoritmAcceptanceToolAvalonia.Utils;
+namespace AlgorithmAcceptanceToolAvalonia.Utils;
 
 public static class GuessUtil
 {
+    private static readonly List<string> BODY = ["JGQ", "ZL", "ZJ", "RG", "HX"];
+    private static readonly List<string> LOAD = ["PB", "P", "SL", "YW", "M", "BT", "Z"];
+
     // 异常类型与关键词的映射
     private static readonly Dictionary<string, List<string>> GuessLabels = new()
     {
@@ -19,12 +22,12 @@ public static class GuessUtil
         ["RG"] = ["软管", "RG"],
         ["HX"] = ["火星", "火", "HX"],
         ["PB"] = ["布", "PB", "篷布"],
-        ["P"] = ["P", "人"],
+        ["P"] = ["P", "人员"],
         ["SL"] = ["撒", "SL"],
         ["YW"] = ["物", "YW"],
         ["M"] = ["门", "M"],
         ["BT"] = ["灯",  "BT"],
-        ["Z"] = ["主机", "Z"],
+        // ["Z"] = ["主机", "Z"],
         [""] = ["误", "误检"]
     };
     
@@ -67,5 +70,14 @@ public static class GuessUtil
         }
 
         return label;
+    }
+
+    public static string TryGetTaskName(string label)
+    {
+        if (BODY.Any(label.ToUpper().Contains))
+            return nameof(BODY);
+        if (LOAD.Any(label.ToUpper().Contains))
+            return nameof(LOAD);
+        return nameof(BODY);
     }
 }

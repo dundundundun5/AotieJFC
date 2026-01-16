@@ -1,0 +1,24 @@
+<sukiUi:SukiWindow
+    Height="1080"
+    KeyDown="OnKeyDown"
+    Title="放大"
+    Width="1920"
+    WindowStartupLocation="CenterScreen"
+    WindowState="FullScreen"
+    mc:Ignorable="d"
+    x:Class="AlgorithmAcceptanceToolAvalonia.Views.FullScreenImageView"
+    x:DataType="vm:FullScreenImageViewModel"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:sukiUi="clr-namespace:SukiUI.Controls;assembly=SukiUI"
+    xmlns:vm="clr-namespace:AlgorithmAcceptanceToolAvalonia.ViewModels"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <Design.DataContext>
+        <vm:RiskDetectViewModel />
+    </Design.DataContext>
+    <Image
+        DoubleTapped="OnImageDoubleTapped"
+        Source="{Binding FullScreenImage}"
+        Stretch="Uniform" />
+</sukiUi:SukiWindow>

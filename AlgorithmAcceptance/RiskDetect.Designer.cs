@@ -35,6 +35,11 @@ namespace AlgorithmAcceptanceTool
             panel1 = new System.Windows.Forms.Panel();
             label5 = new System.Windows.Forms.Label();
             pnlAlgorithmAnalysis = new System.Windows.Forms.Panel();
+            checkBox4 = new System.Windows.Forms.CheckBox();
+            checkBox3 = new System.Windows.Forms.CheckBox();
+            label13 = new System.Windows.Forms.Label();
+            comboBox2 = new System.Windows.Forms.ComboBox();
+            checkBox2 = new System.Windows.Forms.CheckBox();
             checkBox1 = new System.Windows.Forms.CheckBox();
             comboBox1 = new System.Windows.Forms.ComboBox();
             label12 = new System.Windows.Forms.Label();
@@ -128,6 +133,11 @@ namespace AlgorithmAcceptanceTool
             // pnlAlgorithmAnalysis
             // 
             pnlAlgorithmAnalysis.BorderStyle = System.Windows.Forms.BorderStyle.Fixed3D;
+            pnlAlgorithmAnalysis.Controls.Add(checkBox4);
+            pnlAlgorithmAnalysis.Controls.Add(checkBox3);
+            pnlAlgorithmAnalysis.Controls.Add(label13);
+            pnlAlgorithmAnalysis.Controls.Add(comboBox2);
+            pnlAlgorithmAnalysis.Controls.Add(checkBox2);
             pnlAlgorithmAnalysis.Controls.Add(checkBox1);
             pnlAlgorithmAnalysis.Controls.Add(comboBox1);
             pnlAlgorithmAnalysis.Controls.Add(label12);
@@ -158,6 +168,55 @@ namespace AlgorithmAcceptanceTool
             pnlAlgorithmAnalysis.Size = new System.Drawing.Size(1138, 316);
             pnlAlgorithmAnalysis.TabIndex = 1;
             pnlAlgorithmAnalysis.Paint += pnlAlgorithmAnalysis_Paint;
+            // 
+            // checkBox4
+            // 
+            checkBox4.Location = new System.Drawing.Point(570, 75);
+            checkBox4.Name = "checkBox4";
+            checkBox4.Size = new System.Drawing.Size(166, 24);
+            checkBox4.TabIndex = 24;
+            checkBox4.Text = "裁剪2048";
+            checkBox4.UseVisualStyleBackColor = true;
+            checkBox4.CheckedChanged += checkBox4_CheckedChanged;
+            // 
+            // checkBox3
+            // 
+            checkBox3.Location = new System.Drawing.Point(698, 39);
+            checkBox3.Name = "checkBox3";
+            checkBox3.Size = new System.Drawing.Size(132, 24);
+            checkBox3.TabIndex = 23;
+            checkBox3.Text = "不保存图片";
+            checkBox3.UseVisualStyleBackColor = true;
+            checkBox3.CheckedChanged += checkBox3_CheckedChanged;
+            // 
+            // label13
+            // 
+            label13.Location = new System.Drawing.Point(752, 76);
+            label13.Name = "label13";
+            label13.Size = new System.Drawing.Size(69, 23);
+            label13.TabIndex = 22;
+            label13.Text = "亮度：";
+            // 
+            // comboBox2
+            // 
+            comboBox2.FormattingEnabled = true;
+            comboBox2.Items.AddRange(new object[] { "1.05", "1.10", "1.15", "1.20", "1.25", "1.30", "1.35", "1.40", "1.45", "1.50", "1.55", "1.60", "1.65", "1.70", "1.75", "1.80", "1.85", "1.90", "1.95", "2.00" });
+            comboBox2.Location = new System.Drawing.Point(827, 73);
+            comboBox2.MaxDropDownItems = 20;
+            comboBox2.Name = "comboBox2";
+            comboBox2.Size = new System.Drawing.Size(121, 28);
+            comboBox2.TabIndex = 21;
+            comboBox2.SelectedIndexChanged += comboBox2_SelectedIndexChanged;
+            // 
+            // checkBox2
+            // 
+            checkBox2.Location = new System.Drawing.Point(441, 74);
+            checkBox2.Name = "checkBox2";
+            checkBox2.Size = new System.Drawing.Size(133, 24);
+            checkBox2.TabIndex = 20;
+            checkBox2.Text = "裁剪1024";
+            checkBox2.UseVisualStyleBackColor = true;
+            checkBox2.CheckedChanged += checkBox2_CheckedChanged;
             // 
             // checkBox1
             // 
@@ -441,6 +500,15 @@ namespace AlgorithmAcceptanceTool
             pnlAnalysisResult.ResumeLayout(false);
             ResumeLayout(false);
         }
+
+        private System.Windows.Forms.CheckBox checkBox4;
+
+        private System.Windows.Forms.CheckBox checkBox3;
+
+        private System.Windows.Forms.ComboBox comboBox2;
+        private System.Windows.Forms.Label label13;
+
+        private System.Windows.Forms.CheckBox checkBox2;
 
         private System.Windows.Forms.CheckBox checkBox1;
 

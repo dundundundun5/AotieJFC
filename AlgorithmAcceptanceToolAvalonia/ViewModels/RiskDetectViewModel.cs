@@ -5,10 +5,11 @@ using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using AlgoritmAcceptanceToolAvalonia.Converters;
-using AlgoritmAcceptanceToolAvalonia.Models;
-using AlgoritmAcceptanceToolAvalonia.Models.Enums;
-using AlgoritmAcceptanceToolAvalonia.Utils;
+using AlgorithmAcceptanceToolAvalonia.Converters;
+using AlgorithmAcceptanceToolAvalonia.Models;
+using AlgorithmAcceptanceToolAvalonia.Models.Entities;
+using AlgorithmAcceptanceToolAvalonia.Models.Enums;
+using AlgorithmAcceptanceToolAvalonia.Utils;
 using Avalonia.Controls.Notifications;
 using Avalonia.Media.Imaging;
 using Avalonia.Threading;
@@ -19,7 +20,7 @@ using Serilog;
 using SukiUI.Dialogs;
 
 
-namespace AlgoritmAcceptanceToolAvalonia.ViewModels;
+namespace AlgorithmAcceptanceToolAvalonia.ViewModels;
 
 public partial class RiskDetectViewModel : ViewModelBase
 {
@@ -107,73 +108,31 @@ public partial class RiskDetectViewModel : ViewModelBase
 
     private Dictionary<string, string> _jpgPathPairs = new();
 
-    private async Task<RiskDetectResult> GetDefectLabelByTaskName(string jpg, string resultPath, List<string> taskNames, bool cropImage, string? cropPath=null)
+    private async Task<RiskDetectResult> GetDefectLabelByTaskName(string jpg, string resultPath, string taskName, bool cropImage)
     {
         var fileName = Path.GetFileName(jpg);
         await using var stream = File.OpenRead(jpg);
-        var label = await GuessUtil.TryGetLabel(jpg);
-        if (taskNames.Count == 1)
-        {
-            var taskName = taskNames[0];
-            // Get Api for Response
-            var httpResponse = await RequestUtil.GetDefectiveLabel(RiskDetectApi, stream, fileName, taskName);
-            var response = httpResponse.Data;
-            // Drawing if exists
-            var resultJpgPath = Path.Join(resultPath, $"任务={taskName}_真实标签={label ?? "无标签文件"}_预测标签={ResponseConverter.GetPredictLabel(response)}_文件名={fileName}");
-            await ImageUtil.Drawing(stream, resultJpgPath, response, cropImage, cropPath);
-            // Path Pairs
-            _jpgPathPairs[resultJpgPath] = jpg;
-            _resultJpgList.Add(ImageUtil.LoadFromLocalPath(resultJpgPath));
-            _resultPathList.Add(resultJpgPath);
-            _resultClassifiedList.Add(false);
-                
-            // UI dispatcher
-            var tempResult = ResponseConverter.FromResponse(httpResponse, jpg, label);
-            return tempResult;
-        }
-        else 
-        {
-            for (int i = 0; i < taskNames.Count; i++)
-            {
-                if (i == 3)
-                {
-                    // 转成bytes读取成image再转成stream
-                    // 裁剪掉右侧一个正方形 1024x1024
-                }
-
-                if (i == 4)
-                {
-                    // 基于裁剪的再加亮度
-                    
-                }
-                var taskName = taskNames[i];
-                var httpResponse = await RequestUtil.GetDefectiveLabel(RiskDetectApi, stream, fileName, taskName);
-                var response = httpResponse.Data;
-                if (response.DefectList.Count > 0)
-                {
-                    var predictLabel = response.DefectList[0].DefectType;
-                    if (string.Equals(predictLabel.ToUpper(), "BT"))
-                    {
-                        var resultJpgPath = Path.Join(resultPath, $"任务={taskName}_真实标签={label ?? "无标签文件"}_预测标签={ResponseConverter.GetPredictLabel(response)}_文件名={fileName}");
-                        await ImageUtil.Drawing(stream, resultJpgPath, response, cropImage, cropPath);
-                        // Path Pairs
-                        _jpgPathPairs[resultJpgPath] = jpg;
-                        _resultJpgList.Add(ImageUtil.LoadFromLocalPath(resultJpgPath));
-                        _resultPathList.Add(resultJpgPath);
-                        _resultClassifiedList.Add(false);
-                        var tempResult = ResponseConverter.FromResponse(httpResponse, jpg, label);
-                        return tempResult;
-                    }
-                }
-            }
-
-            return ResponseConverter.FromResponse(null, jpg, label);;
-        }
+        var guessedLabel = await GuessUtil.TryGetLabel(jpg);
+        if (guessedLabel != null)
+            taskName = GuessUtil.TryGetTaskName(guessedLabel);
+        // Get Api for Response
+        var httpResponse = await RequestUtil.GetDefectiveLabel(RiskDetectApi, stream, fileName, taskName);
+        var response = httpResponse.Data;
+        // Drawing if exists
+        var resultJpgPath = Path.Join(resultPath, $"任务={taskName}_真实标签={guessedLabel ?? "无标签文件"}_预测标签={ResponseConverter.GetPredictLabel(response)}_文件名={fileName}");
+        await ImageUtil.Drawing(stream, resultJpgPath, response, cropImage, ImagePath);
+        // Path Pairs
+        _jpgPathPairs[resultJpgPath] = jpg;
+        _resultJpgList.Add(ImageUtil.LoadFromLocalPath(resultJpgPath));
+        _resultPathList.Add(resultJpgPath);
+        _resultClassifiedList.Add(false);
+            
+        // UI dispatcher
+        var tempResult = ResponseConverter.FromResponse(httpResponse, jpg, guessedLabel, taskName);
+        return tempResult;
+    
         
     }
-
-
-    private List<string> _folders = Enum.GetNames<EnumFolder>().Select(a => a.ToLower()).ToList();
 
     private string
         _resultPath = string.Empty,
@@ -210,6 +169,11 @@ public partial class RiskDetectViewModel : ViewModelBase
         {
             IsAnalyzing = true;
             RiskDetectResults.Clear();
+            _jpgPathPairs.Clear();
+            _resultJpgList.Clear();
+            _resultPathList.Clear();
+            _resultClassifiedList.Clear();
+            
             var jpgs = ImageUtil.GetAllJpgPath(ImagePath);
             if (jpgs.Count == 0)
             {
@@ -225,17 +189,14 @@ public partial class RiskDetectViewModel : ViewModelBase
             CreateDirectories(ImagePath);
             var paralleOptions = new ParallelOptions()
             {
-                MaxDegreeOfParallelism = 1,
+                MaxDegreeOfParallelism = 4,
                 CancellationToken = token
             };
 
-            List<string> taskNames = TaskNameConverter.FromEnum(SelectedTaskName);
+            string taskName = TaskNameConverter.FromEnum(SelectedTaskName);
             await Parallel.ForEachAsync(jpgs, paralleOptions, async (jpg, cancellationToken) =>
             {
-                // 如果是产出的目录，则不分析
-                if (_folders.Any(jpg.ToLower().Contains))
-                    return;
-                var tempResult = await GetDefectLabelByTaskName(jpg, _resultPath, taskNames, CropImage, _cropPath);
+                var tempResult = await GetDefectLabelByTaskName(jpg, _resultPath, taskName, CropImage);
                 await Dispatcher.UIThread.InvokeAsync(() =>
                 {
                     PresentImage = ImageUtil.LoadFromLocalPath(jpg);
@@ -271,6 +232,7 @@ public partial class RiskDetectViewModel : ViewModelBase
     partial void OnIsClassifiedChanged(bool value)
     {
         OnPropertyChanged(nameof(ReadyToMarkError));
+        OnPropertyChanged(nameof(ReadyToRevokeError));
         MarkErrorCommand.NotifyCanExecuteChanged();
         RevokeErrorCommand.NotifyCanExecuteChanged();
     }
@@ -289,12 +251,6 @@ public partial class RiskDetectViewModel : ViewModelBase
         else
             targetPath = Path.Join(_trueNegativePath, fileName);    
         File.Copy(sourcePath, targetPath, true);
-        DialogManager.CreateDialog()
-            .WithTitle("操作成功")
-            .WithContent($"文件路径 -> {targetPath}")
-            .Dismiss().ByClickingBackground()
-            .OfType(NotificationType.Success)
-            .TryShow();
         _resultClassifiedList[JpgIndex] = true;
         IsClassified = _resultClassifiedList[JpgIndex];
     }
