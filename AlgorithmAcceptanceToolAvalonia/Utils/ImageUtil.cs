@@ -31,7 +31,19 @@ public static class ImageUtil
         
     }
 
-    public static async Task Drawing(FileStream imageSteam, string resultJpgPath,AlgorithmResponse response, bool cropImage, string? cropPath=null)
+    public static string TryGetTimestamp(string fileName)
+    {
+        
+        var idx = fileName.IndexOf("202", StringComparison.Ordinal);
+        if (idx > 0)
+        {
+            var l = "2025-xx-xx-xx-xx-xx-xxx".Length;
+            return fileName.Substring(idx, l);
+        }
+
+        return DateTime.Now.ToString("yyyy-MM-dd-HH-mm-ss-ooo");
+    }
+    public static async Task Drawing(FileStream imageSteam, string resultJpgPath,AlgorithmResponse response, bool cropImage, string? cropPath=null, bool classify = true)
     {
         // 将 FileStream 转换为字节数组
         byte[] bytes;
@@ -61,20 +73,28 @@ public static class ImageUtil
             {
                 var newImage = image.Clone();
                 newImage.Mutate(img => img.Crop(new Rectangle(x1, y1, x2-x1, y2-y1)));
-                var newCropName = $"{fileName.Replace(".jpg", "").Replace("_", "+").Split("+")[^1]}-{l.ToUpper()}-{x1}-{y1}-{x2}-{y2}-{s}-{a}-{v}.jpg";
+                var timestamp = TryGetTimestamp(fileName);
+                var newCropName = $"{timestamp}-{l.ToUpper()}-{x1}-{y1}-{x2}-{y2}-{s}-{a}-{v}.jpg";
+                if (classify)
+                {
+                    cropPath = Path.Join(cropPath, fileName.Split("_")[1], "误检");
+                }
                 cropPath = Path.Join(cropPath, l.ToUpper());
                 if (!Directory.Exists(cropPath))
                     Directory.CreateDirectory(cropPath);
-                await newImage.SaveAsync(Path.Join(cropPath, newCropName));
+                var targetPath = Path.Join(cropPath, newCropName);
+                Console.WriteLine($" -> {targetPath}");
+                await newImage.SaveAsync(targetPath);
+                break;
             }
             
             
-            var redPen = Pens.Solid(SixLabors.ImageSharp.Color.Red, 5); // 5px stroke width
+            var redPen = Pens.Solid(SixLabors.ImageSharp.Color.Red, 4); // 5px stroke width
             image.Mutate(x => x.Draw(redPen, rect));
             
             
         }
-        image.Mutate(x => x.Brightness(1.25f));
+        image.Mutate(x => x.Brightness(1.5f));
         await image.SaveAsync(resultJpgPath);
     }
     

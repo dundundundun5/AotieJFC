@@ -9,6 +9,7 @@ public class ViewModelBase : ObservableObject
     protected string SegmentApi;
     protected string OcrApi;
     protected string RiskDetectApi;
+    protected string DevRiskDetectApi;
     protected ViewModelBase()
     {
         IConfiguration configuration = new ConfigurationBuilder()
@@ -19,8 +20,10 @@ public class ViewModelBase : ObservableObject
         string segmentApi = configuration.GetSection("SegmentApi").Value;
         string ocrApi = configuration.GetSection("OcrApi").Value;
         string riskDetectApi = configuration.GetSection("RiskDetectApi").Value;
+        string devUrl = configuration.GetSection("DevUrl").Value;
         SegmentApi = baseUrl + segmentApi;
         OcrApi = baseUrl + ocrApi;
         RiskDetectApi = baseUrl + riskDetectApi;
+        DevRiskDetectApi = devUrl + riskDetectApi;
     }
 }

@@ -11,6 +11,7 @@ using AlgorithmAcceptanceToolAvalonia.Models.Entities;
 using AlgorithmAcceptanceToolAvalonia.Models.Enums;
 using AlgorithmAcceptanceToolAvalonia.Utils;
 using Avalonia.Controls.Notifications;
+using Avalonia.Interactivity;
 using Avalonia.Media.Imaging;
 using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
@@ -29,6 +30,9 @@ public partial class RiskDetectViewModel : ViewModelBase
 
     [ObservableProperty]
     private bool _isAnalyzing;
+
+    [ObservableProperty]
+    private bool _classifyByStation = true;
 
     partial void OnIsAnalyzingChanged(bool value)
     {
@@ -49,7 +53,7 @@ public partial class RiskDetectViewModel : ViewModelBase
     [ObservableProperty] 
     private ObservableCollection<RiskDetectResult> _riskDetectResults = new ObservableCollection<RiskDetectResult>();
 
-    private List<Bitmap> _resultJpgList = [];
+    
     private List<string> _resultPathList = [];
     private List<bool> _resultClassifiedList = [];
     partial void OnImagePathChanged(string value)
@@ -70,7 +74,9 @@ public partial class RiskDetectViewModel : ViewModelBase
     [ObservableProperty]
     private bool _cropImage;
 
-    
+
+    [ObservableProperty]
+    private string _progress = string.Empty;
     public event Action<RiskDetectResult> DataGridChanged = (result) =>
     {
 
@@ -81,10 +87,11 @@ public partial class RiskDetectViewModel : ViewModelBase
         
         Dispatcher.UIThread.Invoke(() =>
         {
-            PresentImage = _resultJpgList[newValue];
+            PresentImage = ImageUtil.LoadFromLocalPath(_resultPathList[newValue]);
             DataGridChanged?.Invoke(RiskDetectResults[newValue]);
         });
         IsClassified = _resultClassifiedList[newValue];
+        Progress = $" {newValue + 1} / {_resultPathList.Count}";
         OnPropertyChanged(nameof(IsNotEnd));
         OnPropertyChanged(nameof(IsNotStart));
         NextJpgCommand.NotifyCanExecuteChanged();
@@ -108,22 +115,72 @@ public partial class RiskDetectViewModel : ViewModelBase
 
     private Dictionary<string, string> _jpgPathPairs = new();
 
+    private DispatcherTimer _timer;
+    [RelayCommand]
+    private void InitializeDailyTimer()
+    {
+        
+        // 创建定时器
+        _timer = new DispatcherTimer();
+        _timer.Interval = TimeSpan.FromDays(1);
+        _timer.Tick += (sender, args) =>
+        {
+            AutoClassify(sender);
+        };
+        _timer.Start();
+        AutoClassify(null);
+    }
+
+    private async void AutoClassify(object? sender)
+    {
+        try
+        {
+            string targetPath = @"D:\新标注文件";
+            DateTime d = DateTime.Now.AddDays(-1);
+            targetPath = Path.Join(targetPath, $"裁剪{d:MMdd}");
+            if (Directory.Exists(targetPath))
+                return;
+            ImagePath = @"Z:\个人文件夹\张灵顿\manual_error";
+            CropImage = true;
+            ClassifyByStation = true;
+            SelectedTaskName = EnumTaskName.自动;
+            
+            await AnalyzeRisks(new CancellationToken(false));
+            foreach (var dir in Directory.GetDirectories(ImagePath))
+            {
+                var name = Path.GetFileName(dir);
+                
+                CopyUtil.CopyDirectory(dir, Path.Join(targetPath, name), true);
+                Directory.Delete(dir, true);
+            }
+        }
+        catch (Exception e)
+        {
+            Log.Error("{ErrorMessage}", e.ToString());
+        }
+        
+    }
+    
+    public event Action AutoClose = () =>
+    {
+
+    };
     private async Task<RiskDetectResult> GetDefectLabelByTaskName(string jpg, string resultPath, string taskName, bool cropImage)
     {
         var fileName = Path.GetFileName(jpg);
         await using var stream = File.OpenRead(jpg);
         var guessedLabel = await GuessUtil.TryGetLabel(jpg);
-        if (guessedLabel != null)
+        if (guessedLabel != null && taskName == nameof(EnumTaskName.自动))
             taskName = GuessUtil.TryGetTaskName(guessedLabel);
         // Get Api for Response
+        
         var httpResponse = await RequestUtil.GetDefectiveLabel(RiskDetectApi, stream, fileName, taskName);
         var response = httpResponse.Data;
         // Drawing if exists
-        var resultJpgPath = Path.Join(resultPath, $"任务={taskName}_真实标签={guessedLabel ?? "无标签文件"}_预测标签={ResponseConverter.GetPredictLabel(response)}_文件名={fileName}");
-        await ImageUtil.Drawing(stream, resultJpgPath, response, cropImage, ImagePath);
+        var resultJpgPath = Path.Join(resultPath, $"任务={taskName}+真实标签={guessedLabel ?? "无猜测标签"}+预测标签={ResponseConverter.GetPredictLabel(response)}+文件名={fileName}");
+        await ImageUtil.Drawing(stream, resultJpgPath, response, cropImage, ImagePath, ClassifyByStation);
         // Path Pairs
         _jpgPathPairs[resultJpgPath] = jpg;
-        _resultJpgList.Add(ImageUtil.LoadFromLocalPath(resultJpgPath));
         _resultPathList.Add(resultJpgPath);
         _resultClassifiedList.Add(false);
             
@@ -137,18 +194,10 @@ public partial class RiskDetectViewModel : ViewModelBase
     private string
         _resultPath = string.Empty,
         _truePositivePath = string.Empty,
-        _trueNegativePath = string.Empty,
-        _cropPath = string.Empty;
+        _trueNegativePath = string.Empty;
 
     private void CreateDirectories(string imagePath)
     {
-        _cropPath = Path.Join(imagePath, nameof(EnumFolder.Crop).ToLower());
-        if (Directory.Exists(_cropPath))
-            Directory.Delete(_cropPath, true);
-        if (CropImage)
-        {
-            Directory.CreateDirectory(_cropPath);
-        }
         _resultPath = Path.Join(imagePath, nameof(EnumFolder.Result).ToLower());
         _truePositivePath = Path.Join(imagePath, nameof(EnumFolder.异常));
         _trueNegativePath = Path.Join(imagePath, nameof(EnumFolder.误检));
@@ -170,40 +219,43 @@ public partial class RiskDetectViewModel : ViewModelBase
             IsAnalyzing = true;
             RiskDetectResults.Clear();
             _jpgPathPairs.Clear();
-            _resultJpgList.Clear();
             _resultPathList.Clear();
             _resultClassifiedList.Clear();
+            
             
             var jpgs = ImageUtil.GetAllJpgPath(ImagePath);
             if (jpgs.Count == 0)
             {
-                DialogManager.CreateDialog()
-                    .WithTitle("分析中止")
-                    .WithContent($"路径{ImagePath}找不到图片")
-                    .Dismiss().ByClickingBackground()
-                    .OfType(NotificationType.Information)
-                    .TryShow();
+                
                 return;
             }
 
             CreateDirectories(ImagePath);
             var paralleOptions = new ParallelOptions()
             {
-                MaxDegreeOfParallelism = 4,
+                MaxDegreeOfParallelism = 8,
                 CancellationToken = token
             };
 
             string taskName = TaskNameConverter.FromEnum(SelectedTaskName);
             await Parallel.ForEachAsync(jpgs, paralleOptions, async (jpg, cancellationToken) =>
             {
-                var tempResult = await GetDefectLabelByTaskName(jpg, _resultPath, taskName, CropImage);
-                await Dispatcher.UIThread.InvokeAsync(() =>
+                try
                 {
-                    PresentImage = ImageUtil.LoadFromLocalPath(jpg);
-                    RiskDetectResults.Add(tempResult);
-                    OnPropertyChanged(nameof(RiskDetectResults));
+                    var tempResult = await GetDefectLabelByTaskName(jpg, _resultPath, taskName, CropImage);
+                    await Dispatcher.UIThread.InvokeAsync(() =>
+                    {
+                        PresentImage = ImageUtil.LoadFromLocalPath(jpg);
+                        RiskDetectResults.Add(tempResult);
+                        OnPropertyChanged(nameof(RiskDetectResults));
 
-                });
+                    });
+                }
+                catch (Exception ex2)
+                {
+                    Log.Error("{ErrorMessage}",  $"{jpg}-{taskName}-{ex2.ToString()}");
+                }
+                
 
             });
         }
@@ -222,6 +274,11 @@ public partial class RiskDetectViewModel : ViewModelBase
             IsAnalyzing = false;
             JpgIndex = 0;
             OnPropertyChanged(nameof(JpgIndex));
+            if (CropImage)
+            {
+                AutoClean();
+                // AutoClose?.Invoke();
+            }
         }
             
             
@@ -269,18 +326,13 @@ public partial class RiskDetectViewModel : ViewModelBase
             File.Delete(targetPath1);
         if (File.Exists(targetPath2))
             File.Delete(targetPath2);
-        DialogManager.CreateDialog()
-            .WithTitle("撤销成功")
-            .Dismiss().ByClickingBackground()
-            .OfType(NotificationType.Success)
-            .TryShow();
         _resultClassifiedList[JpgIndex] = false;
         IsClassified = _resultClassifiedList[JpgIndex];
     }
     
     
     public bool IsNotStart => JpgIndex != 0 && !IsAnalyzing;
-    public bool IsNotEnd => (JpgIndex + 1) != _resultJpgList.Count && !IsAnalyzing;
+    public bool IsNotEnd => (JpgIndex + 1) != _resultPathList.Count && !IsAnalyzing;
     
     [RelayCommand(CanExecute = nameof(IsNotEnd))]
     private void NextJpg()
@@ -292,5 +344,28 @@ public partial class RiskDetectViewModel : ViewModelBase
     private void PreviousJpg()
     {
         JpgIndex -= 1;
+    }
+
+    private void AutoClean()
+    {
+
+        if (Directory.Exists(_resultPath))
+            Directory.Delete(_resultPath, true);
+        if (Directory.Exists(_trueNegativePath))
+            Directory.Delete(_trueNegativePath, true);
+        if (Directory.Exists(_truePositivePath))
+            Directory.Delete(_truePositivePath, true);
+        foreach (var jpg in _jpgPathPairs.Values.ToList())
+        {
+            try
+            {
+                Console.WriteLine($"Delete {jpg}");
+                File.Delete(jpg);
+            }
+            catch (Exception e)
+            {
+                Log.Error("{ErrorMessage}", e.ToString());
+            }
+        }
     }
 }

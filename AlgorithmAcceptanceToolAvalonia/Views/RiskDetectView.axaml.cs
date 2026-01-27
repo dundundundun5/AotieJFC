@@ -24,7 +24,12 @@ public partial class RiskDetectView : SukiWindow
             RiskDetectResultsGrid.ScrollIntoView(result, null);
 
         };
+        
         InitializeComponent();
+        this.Loaded += (sender, args) =>
+        {
+            _viewModel.InitializeDailyTimerCommand.Execute(null);
+        };
     }
 
     private async void OpenFolder(object? sender, RoutedEventArgs e)

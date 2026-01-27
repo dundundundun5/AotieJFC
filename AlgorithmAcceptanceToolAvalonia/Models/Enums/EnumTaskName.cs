@@ -4,5 +4,6 @@ public enum EnumTaskName
 {
     车身,
     走行,
-    标志灯
+    左标志灯,
+    自动
 }

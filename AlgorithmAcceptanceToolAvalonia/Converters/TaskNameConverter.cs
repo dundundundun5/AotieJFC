@@ -10,7 +10,6 @@ public class TaskNameConverter
     public static readonly string Load = "LOAD";
     public static readonly string Body = "BODY";
     public static readonly string Left = "LEFT";
-    public static readonly string Crop = "CROP";
     public static string FromEnum(EnumTaskName taskName)
     {
         if (taskName is EnumTaskName.车身)
@@ -21,9 +20,12 @@ public class TaskNameConverter
         {
             return Body;
         }
-        else if (taskName is EnumTaskName.标志灯)
+        else if (taskName is EnumTaskName.左标志灯)
         {
-            return Load;
+            return Left;
+        } else if (taskName is EnumTaskName.自动)
+        {
+            return nameof(EnumTaskName.自动);
         }
 
         return Load;

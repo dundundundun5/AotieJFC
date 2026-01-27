@@ -18,6 +18,7 @@ public partial class MainWindow : Window
     private const string DetectCsFolder = "车身误检测", DetectZxFolder = "走行误检测", DetectManulFolder = "manual_error", ScoreFolder = "score";
     private DispatcherTimer? _inactivityTimer;
     private DispatcherTimer? _dailyTimer;
+    private Timer _timer;
     private DateTime? _lastExecutionDate;
     private static DateTime _today = DateTime.Now;
     private static bool initializing = true;
@@ -112,19 +113,29 @@ public partial class MainWindow : Window
 
     private void InitializeDailyTimer()
     {
-        _dailyTimer = new DispatcherTimer();
-        // 从程序启动时间开始计算1天采集一次昨天的告警
-        _dailyTimer.Interval = TimeSpan.FromDays(1);
-        _dailyTimer.Tick += ((sender, args) =>
+        DateTime now = DateTime.Now;
+        DateTime firstRun = new DateTime(now.Year, now.Month, now.Day, 6, 0, 0);
+        
+        if (now > firstRun)
         {
-            if (cnt == 20)
-                return;
-            _presentDate = DateTime.Now.AddDays(-1);
-            // 收集一次告警
-            GatherWarningClick(null, null);
-            cnt++;
-        });
-        _dailyTimer.Start();
+            firstRun = firstRun.AddDays(1);
+        }
+
+        TimeSpan timeToGo = firstRun - now;
+        
+        // 创建定时器
+        _timer = new Timer(RunTask, null, timeToGo, TimeSpan.FromDays(1));
+        
+    }
+
+    private void RunTask(object? a)
+    {
+        if (cnt == 30)
+            return;
+        _presentDate = DateTime.Now.AddDays(-1);
+        // 收集一次告警
+        GatherWarningClick(null, null);
+        cnt++;
     }
     private void CheckIfExists() {
         string desktopPath;

@@ -11,23 +11,25 @@ namespace AlgorithmAcceptanceToolAvalonia.Utils;
 public static class GuessUtil
 {
     private static readonly List<string> BODY = ["JGQ", "ZL", "ZJ", "RG", "HX"];
-    private static readonly List<string> LOAD = ["PB", "P", "SL", "YW", "M", "BT", "Z"];
+    private static readonly List<string> LOAD = ["PB", "P", "SL", "YW", "M", "BT", "Z", "C", "BF"];
 
     // 异常类型与关键词的映射
     private static readonly Dictionary<string, List<string>> GuessLabels = new()
     {
         ["JGQ"] = ["紧", "紧固器", "JGQ"],
         ["ZL"] = ["闸链", "闸", "ZL"],
+        ["ZW"] = ["异物", "ZW", "悬挂"],
         ["ZJ"] = ["折角", "折", "ZJ"],
         ["RG"] = ["软管", "RG"],
         ["HX"] = ["火星", "火", "HX"],
         ["PB"] = ["布", "PB", "篷布"],
         ["P"] = ["P", "人员"],
         ["SL"] = ["撒", "SL"],
-        ["YW"] = ["物", "YW"],
-        ["M"] = ["门", "M"],
+        ["YW"] = ["自燃", "YW", "烟雾"],
+        ["M"] = ["车门", "M"],
         ["BT"] = ["灯",  "BT"],
-        // ["Z"] = ["主机", "Z"],
+        ["C"] = ["车窗", "车门纵向"],
+        ["Z"] = ["主机", "列尾"],
         [""] = ["误", "误检"]
     };
     
