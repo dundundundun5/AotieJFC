@@ -53,6 +53,8 @@ public partial class RiskDetectViewModel : ViewModelBase
     [ObservableProperty] 
     private ObservableCollection<RiskDetectResult> _riskDetectResults = new ObservableCollection<RiskDetectResult>();
 
+    [ObservableProperty]
+    private bool _autoClassifyEnabled = false;
     
     private List<string> _resultPathList = [];
     private List<bool> _resultClassifiedList = [];
@@ -125,31 +127,72 @@ public partial class RiskDetectViewModel : ViewModelBase
         _timer.Interval = TimeSpan.FromDays(1);
         _timer.Tick += (sender, args) =>
         {
-            AutoClassify(sender);
+            if (!AutoClassifyEnabled)
+                return;
+            AutoClassify();
         };
         _timer.Start();
-        AutoClassify(null);
+        
     }
 
-    private async void AutoClassify(object? sender)
+    partial void OnAutoClassifyEnabledChanged(bool value)
     {
+        if (value)
+            Task.Run(AutoClassify);
+
+    }
+
+    private async void AutoClassify()
+    {
+        
         try
         {
+            Dispatcher.UIThread.Invoke(() =>
+            {
+                ImagePath = @"Z:\个人文件夹\张灵顿\manual_error";
+                CropImage = true;
+                ClassifyByStation = true;
+                SelectedTaskName = EnumTaskName.自动;
+            });
+            
+            string archivePath = Path.Join(ImagePath, "archive");
+            try
+            {
+                if (!Directory.Exists(archivePath))
+                    Directory.CreateDirectory(archivePath);
+            }
+            catch (Exception e)
+            {
+                
+            }
+            
+            foreach (var jpg in Directory.GetFiles(ImagePath))
+            {
+                try
+                {
+                    var filename = Path.GetFileName(jpg);
+                    File.Copy(jpg, Path.Join(archivePath, filename), true);
+                }
+                catch (Exception ex)
+                {
+                    
+                }
+               
+            }
+            
             string targetPath = @"D:\新标注文件";
             DateTime d = DateTime.Now.AddDays(-1);
             targetPath = Path.Join(targetPath, $"裁剪{d:MMdd}");
             if (Directory.Exists(targetPath))
                 return;
-            ImagePath = @"Z:\个人文件夹\张灵顿\manual_error";
-            CropImage = true;
-            ClassifyByStation = true;
-            SelectedTaskName = EnumTaskName.自动;
+           
             
             await AnalyzeRisks(new CancellationToken(false));
             foreach (var dir in Directory.GetDirectories(ImagePath))
             {
                 var name = Path.GetFileName(dir);
-                
+                if (name.Contains("a"))
+                    continue;
                 CopyUtil.CopyDirectory(dir, Path.Join(targetPath, name), true);
                 Directory.Delete(dir, true);
             }
@@ -177,7 +220,7 @@ public partial class RiskDetectViewModel : ViewModelBase
         var httpResponse = await RequestUtil.GetDefectiveLabel(RiskDetectApi, stream, fileName, taskName);
         var response = httpResponse.Data;
         // Drawing if exists
-        var resultJpgPath = Path.Join(resultPath, $"任务={taskName}+真实标签={guessedLabel ?? "无猜测标签"}+预测标签={ResponseConverter.GetPredictLabel(response)}+文件名={fileName}");
+        var resultJpgPath = Path.Join(resultPath, $"{fileName}");
         await ImageUtil.Drawing(stream, resultJpgPath, response, cropImage, ImagePath, ClassifyByStation);
         // Path Pairs
         _jpgPathPairs[resultJpgPath] = jpg;
@@ -216,8 +259,12 @@ public partial class RiskDetectViewModel : ViewModelBase
     {
         try
         {
-            IsAnalyzing = true;
-            RiskDetectResults.Clear();
+            Dispatcher.UIThread.Invoke(() =>
+            {
+                IsAnalyzing = true;
+                RiskDetectResults.Clear();
+            });
+           
             _jpgPathPairs.Clear();
             _resultPathList.Clear();
             _resultClassifiedList.Clear();
@@ -233,7 +280,7 @@ public partial class RiskDetectViewModel : ViewModelBase
             CreateDirectories(ImagePath);
             var paralleOptions = new ParallelOptions()
             {
-                MaxDegreeOfParallelism = 8,
+                MaxDegreeOfParallelism = 1,
                 CancellationToken = token
             };
 
@@ -253,6 +300,7 @@ public partial class RiskDetectViewModel : ViewModelBase
                 }
                 catch (Exception ex2)
                 {
+                    
                     Log.Error("{ErrorMessage}",  $"{jpg}-{taskName}-{ex2.ToString()}");
                 }
                 
@@ -271,9 +319,13 @@ public partial class RiskDetectViewModel : ViewModelBase
         }
         finally
         {
-            IsAnalyzing = false;
-            JpgIndex = 0;
-            OnPropertyChanged(nameof(JpgIndex));
+            Dispatcher.UIThread.Invoke(() =>
+            {
+                IsAnalyzing = false;
+                JpgIndex = 0;
+                OnPropertyChanged(nameof(JpgIndex));
+            });
+            
             if (CropImage)
             {
                 AutoClean();
@@ -285,7 +337,7 @@ public partial class RiskDetectViewModel : ViewModelBase
     }
 
     [ObservableProperty] private bool _isClassified;
-
+   
     partial void OnIsClassifiedChanged(bool value)
     {
         OnPropertyChanged(nameof(ReadyToMarkError));

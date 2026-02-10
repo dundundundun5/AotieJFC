@@ -266,6 +266,7 @@ public partial class MainWindow : INotifyPropertyChanged
 
         string yesterdayPath = Path.Join(AbsolutePath, LongImageFolder, $"{_presentDate:yyyy-MM-dd}");
         //string testPath = new string(@"D:\xmind2025");
+        int count = 0;
         int total = 0;
         int second = 0;
         int sx = 0, xx = 0;
@@ -283,6 +284,7 @@ public partial class MainWindow : INotifyPropertyChanged
                         curDate = File.GetLastWriteTime(imageFile);
                         string destinationPath = Path.Join(resultPath, newFileName);
                         File.Copy(imageFile, destinationPath, true);
+                        count++;
                     }
                 }
             }
@@ -305,7 +307,7 @@ public partial class MainWindow : INotifyPropertyChanged
             File.SetLastWriteTime(avatarTargetPath, curDate.AddMilliseconds(AvatarTimeGap));
             WriteAsync(_myTextbox.box, $"{avatarSourcePath} -> {avatarTargetPath} \u2713\n");
         }
-        WriteAsync(_myTextbox.box, $"total={total},sx={sx},xx={xx},长图收集完成，存储在 {resultPath}\n");
+        WriteAsync(_myTextbox.box, $"total={total},sx={sx},xx={xx}, count={count},长图收集完成，存储在 {resultPath}\n");
         //WriteAsync(MyTextbox.box, $"如果站点选择错误，则将{resultPath}的{resultPath.Split('\\')[1]}手动改成实际站点名称\n");
         Process.Start("explorer.exe", resultPath);
 

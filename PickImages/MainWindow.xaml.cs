@@ -119,12 +119,14 @@ public partial class MainWindow : Window
         if (now > firstRun)
         {
             firstRun = firstRun.AddDays(1);
+            RunTask(null);
         }
 
         TimeSpan timeToGo = firstRun - now;
         
         // 创建定时器
         _timer = new Timer(RunTask, null, timeToGo, TimeSpan.FromDays(1));
+        
         
     }
 
@@ -133,10 +135,69 @@ public partial class MainWindow : Window
         if (cnt == 30)
             return;
         _presentDate = DateTime.Now.AddDays(-1);
+        
+        var reuslt = CountLongImages();
         // 收集一次告警
-        GatherWarningClick(null, null);
+        string c = "";
+        try
+        {
+            GatherWarning();
+            PickWarningLongImages();
+            PickImagesByScore();
+            c = FtpUploadWarning();
+        }
+        catch (Exception exception)
+        {
+            AsyncWrite(c2t.box, $"{exception.ToString()}\n");
+        }
+        
+        FileStream b = File.OpenWrite($"{_presentStation}.csv");
+        reuslt += $",{c}";
+        b.Write(System.Text.Encoding.UTF8.GetBytes(reuslt));
+        b.Close();
+        
+        var ftp = Dundun.Ftp();
+        
+        ftp.UploadFile($"{_presentStation}.csv", Path.Join(FtpRemotePath, $"{_presentStation}.csv"));
+        AsyncWrite(c2t.box, reuslt);
+        
+        
         cnt++;
     }
+    private const string AbsolutePath = @"D:\";
+    private const string LongImageFolder = "FTP2";
+    private string CountLongImages() {
+        string yesterdayPath = Path.Join(AbsolutePath, LongImageFolder, $"{_presentDate:yyyy-MM-dd}");
+        //string testPath = new string(@"D:\xmind2025");
+        int count = 0;
+        int total = 0;
+        int second = 0;
+        int sx = 0, xx = 0;
+        
+        foreach (var timestampDirectory in Directory.GetDirectories(yesterdayPath)) {
+            string cur = "null";
+            foreach (var trainTypeDirectory in Directory.GetDirectories(timestampDirectory))
+            {
+                if (trainTypeDirectory.Contains("cs-z")) {
+                    foreach (var imageFile in Directory.GetFiles(trainTypeDirectory, "*.jpg")) {
+                        count++;
+                    }
+                }
+            }
+            total += 1;
+            if (cur == "null")
+                continue;
+            string[] t = cur.Split("+");
+            if (t[0].Contains("SX"))
+                sx++;
+            else
+                xx++;
+        }
+        string result = $"{_presentDate:yyyy-MM-dd},{total},{count}";
+        return result;
+    }
+    
+    
     private void CheckIfExists() {
         string desktopPath;
         string pingYing = "";
@@ -249,17 +310,7 @@ public partial class MainWindow : Window
         
         await Task.Run(() =>
         {
-            try
-            {
-                GatherWarning();
-                PickWarningLongImages();
-                PickImagesByScore();
-                FtpUploadWarning();
-            }
-            catch (Exception exception)
-            {
-                AsyncWrite(c2t.box, $"{exception.ToString()}\n");
-            }
+            
         });
       
 
@@ -360,8 +411,9 @@ public partial class MainWindow : Window
         });
        
     }
-    private void FtpUploadWarning()
+    private string FtpUploadWarning()
     {
+        int count = 0;
         var ftp = Dundun.Ftp();
         (string, string)[] folderPairs = [(DetectManulFolder, "manual_error"), (ScoreFolder , "manual_error")];
         foreach (var (localFolder,remoteFolder) in folderPairs)
@@ -374,6 +426,7 @@ public partial class MainWindow : Window
                 try
                 {
                     ftp.UploadFile(warningJpg, Path.Join(remotePath, filename));
+                    count++;
                     AsyncWrite(c2t.box, $"{filename} -> {remotePath}\u2713\n");
                     File.Delete(warningJpg);
                 }
@@ -383,6 +436,8 @@ public partial class MainWindow : Window
                 }
             }
         }
+
+        return count.ToString();
     }
     private void PickImagesByScore()
     {

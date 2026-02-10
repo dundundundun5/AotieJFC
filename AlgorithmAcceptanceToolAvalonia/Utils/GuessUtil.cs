@@ -29,7 +29,7 @@ public static class GuessUtil
         ["M"] = ["车门", "M"],
         ["BT"] = ["灯",  "BT"],
         ["C"] = ["车窗", "车门纵向"],
-        ["Z"] = ["主机", "列尾"],
+        ["Z"] = ["主机", "列尾", "Z"],
         [""] = ["误", "误检"]
     };
     
@@ -37,11 +37,12 @@ public static class GuessUtil
     // 根据路径猜测标签
     private static string? GuessLabelFromPath(string filePath)
     {
-
+        filePath = filePath.Replace(".jpg", "");
+        filePath = filePath[1..];
         // 遍历所有异常类型，检查路径是否包含对应的关键词
         foreach (var (label, keywords) in GuessLabels)
         {
-            if (keywords.Any(filePath.Contains))
+            if (keywords.Any(filePath.ToUpper().Contains))
                 return label;
         }
 

@@ -84,7 +84,12 @@
                 IsEnabled="{Binding !IsAnalyzing}"
                 Margin="5"
                 Width="120" />
-
+            <CheckBox
+                Content="定时自动裁剪"
+                IsChecked="{Binding AutoClassifyEnabled}"
+                IsEnabled="{Binding !IsAnalyzing}"
+                Margin="5"
+                Width="120" />
         </StackPanel>
         <StackPanel
             Grid.Column="0"
@@ -191,6 +196,11 @@
                 Content="撤销标记（Q）"
                 Margin="10,10,0,0"
                 Width="200" />
+            <TextBlock
+                HorizontalAlignment="Center"
+                Text="{Binding Progress}"
+                VerticalAlignment="Center"
+                Width="150" />
         </StackPanel>
 
     </Grid>
