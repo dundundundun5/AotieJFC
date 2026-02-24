@@ -38,6 +38,7 @@ public partial class MainWindow : INotifyPropertyChanged
         (@"TrainMonitorService\Config", "config.txt"),
         (@"TrainMonitorService\Config", "Default.ccf"),
         ("TrainMonitorService.ImageHandler", null),
+        ("TrainMonitorService.ImageHandler", "appsettings.WarningScore.json"),
         (@"TrainStation\Release", "TrainStation.WPF.exe.config")
     ];
     /// <summary>
@@ -159,7 +160,7 @@ public partial class MainWindow : INotifyPropertyChanged
         StartInactivityTimer(1800);
         if (PresentStation != "null")
             DownloadAvatarIfNotExist();
-        CollectConfigs();
+        // CollectConfigs();
     }
 
     
@@ -962,7 +963,7 @@ public partial class MainWindow : INotifyPropertyChanged
     }
     private  void OpenTrainMonitorLogButton_OnClick(object sender, RoutedEventArgs e)
     {
-        
+        CollectConfigs();
     }
     
     private async void OpenImageHandlerLogButton_OnClick(object sender, RoutedEventArgs e)

@@ -59,12 +59,12 @@ def do_task(date, version):
         }
         header = list(res.keys())
         res[version] = row[0]
-        res["告警总数"] = row[-1]
+        
         res["车次数"] = row[-3]
         res["车厢数"] = row[-2]
        
         
-        
+        total = 0
         for image in os.listdir(image_path):
             try:
                 station = image.split("_")[1]
@@ -73,9 +73,11 @@ def do_task(date, version):
                     label = image.split("_")[2].upper()
                     if res.__contains__(label):
                         res[label] += 1
+                        total += 1
             except Exception as e:
                 # print(e)
                 continue
+        res["告警总数"] = total
         error = 0
         for image in os.listdir(error_path):
             try:
@@ -121,8 +123,8 @@ def do_task(date, version):
     
     
 if __name__ == "__main__":
-    # dates = ["2026_02_09"]
-    dates = ["2026_02_09","2026_02_10","2026_02_11"]
+    dates = ["2026_02_14","2026_02_15","2026_02_16","2026_02_17","2026_02_18","2026_02_19","2026_02_20","2026_02_21","2026_02_22"]
+    # dates = ["2026_02_09","2026_02_10","2026_02_11"]
     version = "dev.012-Beta"
     for date in dates:
         do_task(date=date, version=version)

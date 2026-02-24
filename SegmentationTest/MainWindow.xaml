@@ -58,7 +58,7 @@
                 IsEnabled="True"
                 Margin="0,0,0,10"
                 VerticalAlignment="Top"
-                Visibility="Collapsed"
+                Visibility="Visible"
                 Width="150"
                 x:Name="OpenTrainMonitorLogButton" />
             <ComboBox

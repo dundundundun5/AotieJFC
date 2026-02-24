@@ -14,6 +14,7 @@ public partial class MainWindow : Window
     private const string FtpRemotePath = "/个人文件夹/张灵顿";
     private const string SourcePath = @"D:\FTP2";
     private const string WarningFolder = "warning";
+    private const string ArchiveFolder = "station_archive";
     private string?  _presentStation;
     private const string DetectCsFolder = "车身误检测", DetectZxFolder = "走行误检测", DetectManulFolder = "manual_error", ScoreFolder = "score";
     private DispatcherTimer? _inactivityTimer;
@@ -26,6 +27,7 @@ public partial class MainWindow : Window
     private static DateTime __yyesterday = DateTime.Now.AddDays(-2);
     private static DateTime __yyyesterday = DateTime.Now.AddDays(-3);
     private static DateTime __yyyyesterday = DateTime.Now.AddDays(-4);
+    
     private DateTime _presentDate = _yesterday;
     public DateTime[] DateList { get; set; } = [_today, _yesterday, __yyesterday, __yyyesterday, __yyyyesterday];
     private int cnt = 0;
@@ -150,15 +152,18 @@ public partial class MainWindow : Window
         {
             AsyncWrite(c2t.box, $"{exception.ToString()}\n");
         }
-        
-        FileStream b = File.OpenWrite($"{_presentStation}.csv");
+
+        string filenameArchive = $"{_presentStation}_{_presentDate:yyyyMMdd}.csv";
+        string filename = $"{_presentStation}.csv";
+        FileStream b = File.OpenWrite(filenameArchive);
         reuslt += $",{c}";
         b.Write(System.Text.Encoding.UTF8.GetBytes(reuslt));
         b.Close();
         
         var ftp = Dundun.Ftp();
         
-        ftp.UploadFile($"{_presentStation}.csv", Path.Join(FtpRemotePath, $"{_presentStation}.csv"));
+        ftp.UploadFile(filenameArchive, Path.Join(FtpRemotePath, filename));
+        ftp.UploadFile(filenameArchive, Path.Join(FtpRemotePath, ArchiveFolder,filenameArchive));
         AsyncWrite(c2t.box, reuslt);
         
         
