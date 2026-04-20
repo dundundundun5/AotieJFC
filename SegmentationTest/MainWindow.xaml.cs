@@ -150,6 +150,11 @@ public partial class MainWindow : INotifyPropertyChanged
     /// 主窗口构造函数
     /// </summary>
     public MainWindow() {
+    
+    
+    
+    
+
         InitializeComponent();
         _myTextbox = new Console2Textbox(myConsole);
         CheckPresentStation();

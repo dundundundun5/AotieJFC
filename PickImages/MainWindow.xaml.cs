@@ -1,4 +1,5 @@
 using System.IO;
+using System.Runtime.InteropServices.JavaScript;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Threading;
@@ -44,7 +45,9 @@ public partial class MainWindow : Window
         "YW",
         "M",
         "bt",
-        "Z"
+        "Z",
+        "C",
+        "ZW"
     ];
     private readonly string[] _stations = [
         "伍明",
@@ -110,7 +113,7 @@ public partial class MainWindow : Window
         c2t = new Console2Textbox(myConsole);
         Console.WriteLine($"误检测检查日期：{_presentDate:yyyy-MM-dd}");
         CheckIfExists();
-        InitializeDailyTimer();
+        this.ContentRendered += OnLoaded;
     }
 
     private void InitializeDailyTimer()
@@ -132,6 +135,76 @@ public partial class MainWindow : Window
         
     }
 
+    private void Statistics()
+    {
+        try
+        {
+            string labelSourcePath = @"D:\ftp2\Warning";
+            string imageSourcePath = @"D:\ftp2\Warnings";
+            string startDate = "2026-02-09";
+            Dictionary<string, string> labelImagePair = new Dictionary<string, string>();
+
+            foreach (var label in Directory.GetDirectories(labelSourcePath))
+            {
+                var temp0 = label.Split("\\")[^1];
+                if (temp0.Length >= 4)
+                    continue;
+                string labelPath = Path.Join(labelSourcePath, temp0);
+                foreach (var d in Directory.GetDirectories(labelPath))
+                {
+                    var temp1 = d.Split("\\")[^1];
+                    if (String.Compare(temp1, startDate, StringComparison.Ordinal) < 0)
+                        continue;
+                    var imagePath = Path.Join(labelPath, temp1);
+                    foreach (var jpg in Directory.GetFiles(imagePath, "*.jpg", SearchOption.AllDirectories))
+                    {
+                        var temp2 = Path.GetFileName(jpg);
+                        labelImagePair.Add(temp2, temp0);
+                    }
+                }
+            }
+
+            string target = $@"D:\{_presentStation}\manual_error";
+            foreach (var d in Directory.GetDirectories(imageSourcePath))
+            {
+                var temp0 = d.Split("\\")[^1];
+                if (String.Compare(temp0, startDate, StringComparison.Ordinal) < 0)
+                    continue;
+                string imgPath = Path.Join(imageSourcePath, temp0);
+                foreach (var img in Directory.GetFiles(imgPath, "*.jpg", SearchOption.AllDirectories))
+                {
+                    string name = Path.GetFileName(img);
+                    if (labelImagePair.ContainsKey(name))
+                    {
+                        string newName = $"客户端_{_presentStation}_{labelImagePair[name]}_算法返回_{name}";
+                        string finalPath = Path.Join(target, newName);
+                        File.Copy(img, finalPath);
+                        AsyncWrite(c2t.box, $"{img} -> {newName}\n");
+                    }
+                }
+            }
+
+            FtpUploadWarning(archive:true);
+        }
+        catch (Exception ex)
+        {
+            MessageBox.Show($"{ex}\n");
+        }
+        
+    }
+
+    private void OnLoaded(object? s, EventArgs e)
+    {
+        try
+        {
+            Task.Run(InitializeDailyTimer);
+        }
+        catch (Exception ex)
+        {
+            MessageBox.Show($"{ex}");
+        }
+        
+    }
     private void RunTask(object? a)
     {
         if (cnt == 30)
@@ -238,9 +311,14 @@ public partial class MainWindow : Window
 
     }
     private void AsyncWrite(TextBox box, string text) {
-        void Write(System.Windows.Controls.TextBox textBox, string t) {
-            textBox.AppendText(t);
-            textBox.ScrollToEnd();
+        void Write(System.Windows.Controls.TextBox textBox, string t)
+        {
+            Dispatcher.Invoke(() =>
+            {
+                textBox.AppendText(t);
+                textBox.ScrollToEnd();
+            }); 
+            
         }
         Action<TextBox, string> updateAction = new Action<TextBox, string>(Write);
         box.Dispatcher.BeginInvoke(updateAction, box, text);
@@ -310,13 +388,10 @@ public partial class MainWindow : Window
         }
         // Process.Start("explorer.exe", finalPath);
     }
-    private async void GatherWarningClick(object sender, RoutedEventArgs e)
+    private void GatherWarningClick(object sender, RoutedEventArgs e)
     {
         
-        await Task.Run(() =>
-        {
-            
-        });
+        Statistics();
       
 
     }
@@ -416,7 +491,7 @@ public partial class MainWindow : Window
         });
        
     }
-    private string FtpUploadWarning()
+    private string FtpUploadWarning(bool archive = false)
     {
         int count = 0;
         var ftp = Dundun.Ftp();
@@ -425,6 +500,8 @@ public partial class MainWindow : Window
         {
             string localPath = Path.Join(@"D:\", _presentStation, localFolder);
             string remotePath = $"{FtpRemotePath}/{remoteFolder}";
+            if (archive)
+                remotePath = $"{remoteFolder}/{archive}";
             foreach (var warningJpg in Directory.GetFiles(localPath))
             {
                 string filename = warningJpg.Split("\\")[^1];

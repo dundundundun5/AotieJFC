@@ -11,6 +11,7 @@ using AlgorithmAcceptanceToolAvalonia.Models.Entities;
 using AlgorithmAcceptanceToolAvalonia.Models.Enums;
 using AlgorithmAcceptanceToolAvalonia.Utils;
 using Avalonia.Controls.Notifications;
+using Avalonia.Input.Platform;
 using Avalonia.Interactivity;
 using Avalonia.Media.Imaging;
 using Avalonia.Threading;
@@ -19,6 +20,8 @@ using CommunityToolkit.Mvvm.Input;
 using Flurl.Util;
 using Serilog;
 using SukiUI.Dialogs;
+using SukiUI.MessageBox;
+using Tmds.DBus.Protocol;
 
 
 namespace AlgorithmAcceptanceToolAvalonia.ViewModels;
@@ -32,7 +35,7 @@ public partial class RiskDetectViewModel : ViewModelBase
     private bool _isAnalyzing;
 
     [ObservableProperty]
-    private bool _classifyByStation = true;
+    private bool _classifyByStation = false;
 
     partial void OnIsAnalyzingChanged(bool value)
     {
@@ -102,6 +105,7 @@ public partial class RiskDetectViewModel : ViewModelBase
 
     [ObservableProperty]
     private int _selectedDataGridIndex;
+    
     
 
    
@@ -239,6 +243,7 @@ public partial class RiskDetectViewModel : ViewModelBase
         _truePositivePath = string.Empty,
         _trueNegativePath = string.Empty;
 
+    private Dictionary<string, int> res = new Dictionary<string, int>();
     private void CreateDirectories(string imagePath)
     {
         _resultPath = Path.Join(imagePath, nameof(EnumFolder.Result).ToLower());
@@ -257,6 +262,8 @@ public partial class RiskDetectViewModel : ViewModelBase
     [RelayCommand(CanExecute = nameof(ReadyToAnalyze), AllowConcurrentExecutions = true, IncludeCancelCommand = true)]
     private async Task AnalyzeRisks(CancellationToken token)
     {
+        int total = 0;
+    
         try
         {
             Dispatcher.UIThread.Invoke(() =>
@@ -277,25 +284,30 @@ public partial class RiskDetectViewModel : ViewModelBase
                 return;
             }
 
+            total = jpgs.Count;
             CreateDirectories(ImagePath);
             var paralleOptions = new ParallelOptions()
             {
-                MaxDegreeOfParallelism = 1,
+                MaxDegreeOfParallelism = 8,
                 CancellationToken = token
             };
-
+            int b = 1;
             string taskName = TaskNameConverter.FromEnum(SelectedTaskName);
             await Parallel.ForEachAsync(jpgs, paralleOptions, async (jpg, cancellationToken) =>
             {
                 try
                 {
                     var tempResult = await GetDefectLabelByTaskName(jpg, _resultPath, taskName, CropImage);
+                    string predictLabel = tempResult.PredictLabel;
+                    string guessLabel = tempResult.GuessedLabel;
+                    
                     await Dispatcher.UIThread.InvokeAsync(() =>
                     {
                         PresentImage = ImageUtil.LoadFromLocalPath(jpg);
                         RiskDetectResults.Add(tempResult);
                         OnPropertyChanged(nameof(RiskDetectResults));
-
+                        Progress = $"{b} / {total}";
+                        b += 1;
                     });
                 }
                 catch (Exception ex2)
@@ -323,12 +335,23 @@ public partial class RiskDetectViewModel : ViewModelBase
             {
                 IsAnalyzing = false;
                 JpgIndex = 0;
+                var cnt = RiskDetectResults.Count(r => !string.IsNullOrEmpty(r.PredictLabel));
+                string a = $"{ImagePath} ->  {cnt} / {total}";
                 OnPropertyChanged(nameof(JpgIndex));
+                DialogManager.CreateDialog()
+                    .WithContent(a)
+                    .WithTitle("检测结果")
+                    .WithOkResult("确认")
+                    .TryShow();
+                
+
             });
             
             if (CropImage)
             {
-                AutoClean();
+                if (ClassifyByStation)
+                    AutoClean();
+                // AutoClean();
                 // AutoClose?.Invoke();
             }
         }

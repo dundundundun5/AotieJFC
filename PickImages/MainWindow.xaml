@@ -63,10 +63,10 @@
                 x:Name="DatetimeComboBox" />
             <Button
                 Click="GatherWarningClick"
-                Content="（自动）汇总Warning原图并上传"
+                Content="汇总历史告警并上传"
                 Height="40"
                 HorizontalAlignment="Left"
-                IsEnabled="False"
+                IsEnabled="True"
                 Margin="5"
                 Width="220"
                 x:Name="GatherWarningButton" />

@@ -5,8 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 
 namespace AlgorithmAcceptanceTool.Models
-{
-	public class SegmentDefectData
+{	public class SegmentDefectData
 	{
 		public Point BottomRight { get; set; } = new Point();
 

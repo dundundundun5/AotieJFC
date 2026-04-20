@@ -34,16 +34,16 @@ public static class ImageUtil
     public static string TryGetTimestamp(string fileName)
     {
         
-        var idx = fileName.IndexOf("202", StringComparison.Ordinal);
-        if (idx > 0)
+        var idx = fileName.IndexOf("20", StringComparison.Ordinal);
+        if (idx >= 0)
         {
             var l = "2025-xx-xx-xx-xx-xx-xxx".Length;
             return fileName.Substring(idx, l);
         }
-
-        return DateTime.Now.ToString("yyyy-MM-dd-HH-mm-ss-ooo");
+        
+        return DateTime.Now.ToString("yyyy-MM-dd-HH-mm-ss-fff");
     }
-    public static async Task Drawing(FileStream imageSteam, string resultJpgPath,AlgorithmResponse response, bool cropImage, string? cropPath=null, bool classify = true)
+    public static async Task Drawing(FileStream imageSteam, string resultJpgPath,AlgorithmResponse response, bool cropImage, string? cropPath=null, bool classify = false)
     {
         // 将 FileStream 转换为字节数组
         byte[] bytes;
@@ -71,6 +71,8 @@ public static class ImageUtil
             var fileName = Path.GetFileName(resultJpgPath);
             if (cropImage)
             {
+                if (l.Equals("Z") || l.Equals("BT"))
+                    continue;
                 var newImage = image.Clone();
                 newImage.Mutate(img => img.Crop(new Rectangle(x1, y1, x2-x1, y2-y1)));
                 var timestamp = TryGetTimestamp(fileName);
