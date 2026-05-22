@@ -35,7 +35,7 @@ public static class GuessUtil
     
 
     // 根据路径猜测标签
-    private static string? GuessLabelFromPath(string filePath)
+    private static string? GuessLabelFromFilePath(string filePath)
     {
         filePath = filePath.Replace("\\", "/");
         filePath = filePath.Replace(".jpg", "").Replace("manual", "");
@@ -44,14 +44,17 @@ public static class GuessUtil
         // 遍历所有异常类型，检查路径是否包含对应的关键词
         foreach (var (label, keywords) in GuessLabels)
         {
-            if (keywords.Any(filePathList.Contains) || keywords.Any(filePathList[^1].ToUpper().Contains))
-                return label;
+            foreach (var path in filePathList)
+            {
+                if (keywords.Any(path.ToUpper().Contains))
+                    return label;
+            }
         }
 
         return ""; // 未匹配到任何已知异常类型
     }
 
-    public static async Task<string?> TryGetLabel(string jpgPath)
+    public static async Task<string?> GuessLabelFromLabelFile(string jpgPath)
     {
         string? label = null;
         try
@@ -68,7 +71,7 @@ public static class GuessUtil
             }
 
             // 如果没有 JSON 标签文件，尝试从路径猜测标签
-            label = GuessLabelFromPath(jpgPath);
+            label = GuessLabelFromFilePath(jpgPath);
             return label;
         }
         catch (Exception ex)

@@ -216,7 +216,7 @@ public partial class RiskDetectViewModel : ViewModelBase
     {
         var fileName = Path.GetFileName(jpg);
         await using var stream = File.OpenRead(jpg);
-        var guessedLabel = await GuessUtil.TryGetLabel(jpg);
+        var guessedLabel = await GuessUtil.GuessLabelFromLabelFile(jpg);
         if (guessedLabel != null && taskName == nameof(EnumTaskName.自动))
             taskName = GuessUtil.TryGetTaskName(guessedLabel);
         // Get Api for Response
@@ -241,7 +241,8 @@ public partial class RiskDetectViewModel : ViewModelBase
     private string
         _resultPath = string.Empty,
         _truePositivePath = string.Empty,
-        _trueNegativePath = string.Empty;
+        _trueNegativePath = string.Empty,
+        _noLabelPath = string.Empty;
 
     private Dictionary<string, int> res = new Dictionary<string, int>();
     private void CreateDirectories(string imagePath)
@@ -249,6 +250,7 @@ public partial class RiskDetectViewModel : ViewModelBase
         _resultPath = Path.Join(imagePath, nameof(EnumFolder.Result).ToLower());
         _truePositivePath = Path.Join(imagePath, nameof(EnumFolder.异常));
         _trueNegativePath = Path.Join(imagePath, nameof(EnumFolder.误检));
+        _noLabelPath = Path.Join(imagePath, nameof(EnumFolder.NoLabel));
         if (Directory.Exists(_resultPath))
             Directory.Delete(_resultPath, true);
         Directory.CreateDirectory(_resultPath);
@@ -258,6 +260,9 @@ public partial class RiskDetectViewModel : ViewModelBase
         if (Directory.Exists(_truePositivePath))
             Directory.Delete(_truePositivePath, true);
         Directory.CreateDirectory(_truePositivePath);
+        if (Directory.Exists(_noLabelPath))
+            Directory.Delete(_noLabelPath, true);
+        Directory.CreateDirectory(_noLabelPath);
     }
     [RelayCommand(CanExecute = nameof(ReadyToAnalyze), AllowConcurrentExecutions = true, IncludeCancelCommand = true)]
     private async Task AnalyzeRisks(CancellationToken token)
@@ -288,7 +293,7 @@ public partial class RiskDetectViewModel : ViewModelBase
             CreateDirectories(ImagePath);
             var paralleOptions = new ParallelOptions()
             {
-                MaxDegreeOfParallelism = 8,
+                MaxDegreeOfParallelism = 4,
                 CancellationToken = token
             };
             int b = 1;
@@ -307,8 +312,8 @@ public partial class RiskDetectViewModel : ViewModelBase
                         RiskDetectResults.Add(tempResult);
                         OnPropertyChanged(nameof(RiskDetectResults));
                         Progress = $"{b} / {total}";
-                        b += 1;
                     });
+                    b += 1;
                 }
                 catch (Exception ex2)
                 {

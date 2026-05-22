@@ -57,6 +57,8 @@ public static class ImageUtil
 
         // 使用字节数组加载图像，指定像素格式
         var image = Image.Load<Rgba32>(bytes);
+        var rawImage = image.Clone();
+        bool flag = false;
         foreach (var defect in response.DefectList)
         {
             var x1 = (int)defect.TopLeft.X;
@@ -69,6 +71,10 @@ public static class ImageUtil
             var a = defect.DefectArea;
             var v = defect.DefectValue;
             var fileName = Path.GetFileName(resultJpgPath);
+            if (l.Equals("Z"))
+            {
+                flag = true;
+            }
             if (cropImage)
             {
                 if (l.Equals("Z") || l.Equals("BT"))
@@ -98,6 +104,11 @@ public static class ImageUtil
         }
         image.Mutate(x => x.Brightness(1.5f));
         await image.SaveAsync(resultJpgPath);
+        if (!flag)
+        {
+            await rawImage.SaveAsync(resultJpgPath.Replace(nameof(EnumFolder.Result).ToLower(),
+                nameof(EnumFolder.NoLabel).ToLower()));
+        }
     }
     
 }

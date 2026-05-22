@@ -6,5 +6,6 @@ public enum EnumFolder
     Error,
     异常,
     误检,
-    Crop
+    Crop,
+    NoLabel
 }
