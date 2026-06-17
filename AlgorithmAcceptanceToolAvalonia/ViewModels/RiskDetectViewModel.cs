@@ -22,20 +22,41 @@ namespace AlgorithmAcceptanceToolAvalonia.ViewModels;
 
 public partial class RiskDetectViewModel : ViewModelBase
 {
-    public ISukiDialogManager DialogManager { get; } = new SukiDialogManager();
-    public static List<EnumTaskName> TaskNameList => Enum.GetValues<EnumTaskName>().ToList();
+    // community mvvm
+    [ObservableProperty] private bool _isAnalyzing;
+    [ObservableProperty] private bool _classifyByStation = false;
+    [ObservableProperty] private bool _drawLabel = false;
+    [ObservableProperty] private string _imagePath = string.Empty;
+    [ObservableProperty] private ObservableCollection<RiskDetectResult> _riskDetectResults = new ObservableCollection<RiskDetectResult>();
+    [ObservableProperty] private bool _autoClassifyEnabled = false;
+    [ObservableProperty] private EnumTaskName _selectedTaskName = TaskNameList[0];
+    [ObservableProperty] private Bitmap? _presentImage;
+    [ObservableProperty] private int _jpgIndex = 0;
+    [ObservableProperty] private bool _cropImage;
+    [ObservableProperty] private string _progress = string.Empty;
+    [ObservableProperty] private string _filterText = string.Empty;
+    [ObservableProperty] private int _selectedDataGridIndex;
+    [ObservableProperty] private string _logText = string.Empty;
+    [ObservableProperty] private int _drawLabelScale = 2;
+    [ObservableProperty] private float _brightness = 2f; 
+    [ObservableProperty] private bool _addBrightness = false;
+    [ObservableProperty] private bool _isPlaying = false;
+    [ObservableProperty] private string _filterOption = "包含";
+    [ObservableProperty] private bool _isClassified;
+    partial void OnIsClassifiedChanged(bool value)
+    {
+        OnPropertyChanged(nameof(ReadyToMarkError));
+        OnPropertyChanged(nameof(ReadyToRevokeError));
+        MarkErrorCommand.NotifyCanExecuteChanged();
+        RevokeErrorCommand.NotifyCanExecuteChanged();
+    }
 
-    [ObservableProperty]
-    private bool _isAnalyzing;
-
-    [ObservableProperty]
-    private bool _classifyByStation = false;
-
-    [ObservableProperty]
-    private bool _drawLabel = false;
-    
-    
-    
+    partial void OnImagePathChanged(string value)
+    {
+        OnPropertyChanged(nameof(ReadyToAnalyze));
+        AnalyzeRisksCommand.NotifyCanExecuteChanged();
+    }
+     
     partial void OnIsAnalyzingChanged(bool value)
     {
         OnPropertyChanged(nameof(ReadyToAnalyze));
@@ -60,47 +81,6 @@ public partial class RiskDetectViewModel : ViewModelBase
         InitializePlayTimerCommand.NotifyCanExecuteChanged();
     }
 
-
-    [ObservableProperty] 
-    private string _imagePath = string.Empty;
-
-    [ObservableProperty] 
-    private ObservableCollection<RiskDetectResult> _riskDetectResults = new ObservableCollection<RiskDetectResult>();
-
-    [ObservableProperty]
-    private bool _autoClassifyEnabled = false;
-    
-    // private List<string> _resultPathList = [];
-    private List<bool> _resultClassifiedList = [];
-    partial void OnImagePathChanged(string value)
-    {
-        OnPropertyChanged(nameof(ReadyToAnalyze));
-        AnalyzeRisksCommand.NotifyCanExecuteChanged();
-    }
-    
-
-    [ObservableProperty]
-    private EnumTaskName _selectedTaskName = TaskNameList[0];
-
-    
-    [ObservableProperty] private Bitmap _presentImage;
-
-    [ObservableProperty] private int _jpgIndex = 0;
-
-    [ObservableProperty]
-    private bool _cropImage;
-
-
-    [ObservableProperty]
-    private string _progress = string.Empty;
-
-    [ObservableProperty]
-    private string _filterText = string.Empty;
-    public event Action<RiskDetectResult> DataGridChanged = (result) =>
-    {
-
-    };
-
     partial void OnJpgIndexChanged(int oldValue, int newValue)
     {
         if (newValue < 0 || newValue > RiskDetectResults.Count - 1)
@@ -118,40 +98,52 @@ public partial class RiskDetectViewModel : ViewModelBase
         NextJpgCommand.NotifyCanExecuteChanged();
         PreviousJpgCommand.NotifyCanExecuteChanged();
     }
-
-    [ObservableProperty]
-    private int _selectedDataGridIndex;
     
-    
+    partial void OnAutoClassifyEnabledChanged(bool value)
+    {
+        if (value)
+            Task.Run(AutoClassify);
 
+    }
    
-
     partial void OnSelectedDataGridIndexChanged(int value)
     {
         JpgIndex = value;
     }
-    [ObservableProperty]
-    private string _logText = string.Empty;
-    
-    public float[] BrightnessList { get; set; }= [ 2f, 3f, 5f];
-    
-    public int[] DrawLabelScaleList { get; set; } = [2, 3, 4];
-    [ObservableProperty]
-    private int _drawLabelScale = 2;
-    [ObservableProperty]
-    private float _brightness = 2f;
-    private DispatcherTimer? _playTimer = null;
-    [ObservableProperty]
-    private bool _addBrightness = false;
-    public bool ReadyToAnalyze => !string.IsNullOrEmpty(ImagePath) && !IsAnalyzing;
-
-    private Dictionary<string, string> _jpgPathPairs = new();
-
-    private DispatcherTimer _timer;
-
+    // public list
     public List<string> FilterOptionList { get; set; }= ["包含", "不包含"];
-    [ObservableProperty]
-    private string _filterOption = "包含";
+    public float[] BrightnessList { get; set; }= [ 2f, 3f, 5f];
+    public int[] DrawLabelScaleList { get; set; } = [2, 3, 4];
+    public static List<EnumTaskName> TaskNameList => Enum.GetValues<EnumTaskName>().ToList();
+    // public bool
+    public bool ReadyToAnalyze => !string.IsNullOrEmpty(ImagePath) && !IsAnalyzing;
+    public bool CanPlay =>  !IsAnalyzing && !IsPlaying;
+    public bool ReadyToMarkError => !IsAnalyzing && !IsClassified ;
+    public bool ReadyToRevokeError => !IsAnalyzing && IsClassified;
+    public bool IsNotStart => JpgIndex != 0 && !IsAnalyzing;
+    public bool IsNotEnd => (JpgIndex + 1) != RiskDetectResults.Count && !IsAnalyzing;
+    // public object
+    public ISukiDialogManager DialogManager { get; } = new SukiDialogManager();
+    // private
+    private List<bool> _resultClassifiedList = [];
+    private Dictionary<string, string> _jpgPathPairs = new();
+    private DispatcherTimer? _playTimer = null;
+    private DispatcherTimer _timer;
+    private string
+        _resultPath = string.Empty,
+        _truePositivePath = string.Empty,
+        _trueNegativePath = string.Empty,
+        _noLabelPath = string.Empty,
+        _hasLabelPath = string.Empty;
+   
+    
+    
+    // public event
+    public event Action<RiskDetectResult> DataGridChanged = (result) =>
+    {
+
+    };
+    // private method - relaycommand
     [RelayCommand]
     private void InitializeDailyTimer()
     {
@@ -168,10 +160,7 @@ public partial class RiskDetectViewModel : ViewModelBase
         _timer.Start();
         
     }
-
-    [ObservableProperty]
-    private bool _isPlaying = false;
-    public bool CanPlay =>  !IsAnalyzing && !IsPlaying;
+    
     [RelayCommand(CanExecute = nameof(CanPlay))]
     private void InitializePlayTimer()
     {
@@ -193,137 +182,6 @@ public partial class RiskDetectViewModel : ViewModelBase
         _playTimer.Start();
         IsPlaying = true;
 
-    }
-
-    partial void OnAutoClassifyEnabledChanged(bool value)
-    {
-        if (value)
-            Task.Run(AutoClassify);
-
-    }
-
-    private async void AutoClassify()
-    {
-        
-        try
-        {
-            Dispatcher.UIThread.Invoke(() =>
-            {
-                ImagePath = @"Z:\个人文件夹\张灵顿\manual_error";
-                CropImage = true;
-                ClassifyByStation = true;
-                SelectedTaskName = EnumTaskName.自动;
-            });
-            
-            string archivePath = Path.Join(ImagePath, "archive");
-            try
-            {
-                if (!Directory.Exists(archivePath))
-                    Directory.CreateDirectory(archivePath);
-            }
-            catch (Exception e)
-            {
-                
-            }
-            
-            foreach (var jpg in Directory.GetFiles(ImagePath))
-            {
-                try
-                {
-                    var filename = Path.GetFileName(jpg);
-                    File.Copy(jpg, Path.Join(archivePath, filename), true);
-                }
-                catch (Exception ex)
-                {
-                    
-                }
-               
-            }
-            
-            string targetPath = @"D:\新标注文件";
-            DateTime d = DateTime.Now.AddDays(-1);
-            targetPath = Path.Join(targetPath, $"裁剪{d:MMdd}");
-            if (Directory.Exists(targetPath))
-                return;
-           
-            
-            await AnalyzeRisks(new CancellationToken(false));
-            foreach (var dir in Directory.GetDirectories(ImagePath))
-            {
-                var name = Path.GetFileName(dir);
-                if (name.Contains("a"))
-                    continue;
-                CopyUtil.CopyDirectory(dir, Path.Join(targetPath, name), true);
-                Directory.Delete(dir, true);
-            }
-        }
-        catch (Exception e)
-        {
-            Log.Error("{ErrorMessage}", e.ToString());
-        }
-        
-    }
-    
-    private async Task<RiskDetectResult> GetDefectLabelByTaskName(string jpg, string resultPath, string taskName, bool cropImage)
-    {
-        var fileName = Path.GetFileName(jpg);
-        await using var stream = File.OpenRead(jpg);
-        var guessedLabel = "";
-        if (taskName == nameof(EnumTaskName.自动))
-        {
-            guessedLabel = await GuessUtil.GuessLabelFromLabelFile(jpg);
-            if (guessedLabel != null)
-                taskName = GuessUtil.TryGetTaskName(guessedLabel);
-        }
-        
-        // Get Api for Response
-        
-        var httpResponse = await RequestUtil.GetDefectiveLabel(RiskDetectApi, stream, fileName, taskName);
-        var response = httpResponse.Data;
-        // Drawing if exists
-        var resultJpgPath = Path.Join(resultPath, $"{fileName}");
-        await ImageUtil.Drawing(stream, resultJpgPath, response, cropImage, ImagePath, ClassifyByStation, AddBrightness, Brightness, DrawLabel, DrawLabelScale);
-        // Path Pairs
-        _jpgPathPairs[resultJpgPath] = jpg;
-        _resultClassifiedList.Add(false);
-            
-        // UI dispatcher
-        var tempResult = ResponseConverter.FromResponse(httpResponse, jpg, guessedLabel, taskName, resultJpgPath);
-        return tempResult;
-    
-        
-    }
-
-    private string
-        _resultPath = string.Empty,
-        _truePositivePath = string.Empty,
-        _trueNegativePath = string.Empty,
-        _noLabelPath = string.Empty,
-        _hasLabelPath = string.Empty;
-
-  
-    private void CreateDirectories(string imagePath)
-    {
-        _resultPath = Path.Join(imagePath, nameof(EnumFolder.Result).ToLower());
-        _truePositivePath = Path.Join(imagePath, nameof(EnumFolder.异常));
-        _trueNegativePath = Path.Join(imagePath, nameof(EnumFolder.误检));
-        _noLabelPath = Path.Join(imagePath, nameof(EnumFolder.NoLabel));
-        _hasLabelPath = Path.Join(imagePath, nameof(EnumFolder.HasLabel));
-        if (Directory.Exists(_resultPath))
-            Directory.Delete(_resultPath, true);
-        Directory.CreateDirectory(_resultPath);
-        if (Directory.Exists(_trueNegativePath))
-            Directory.Delete(_trueNegativePath, true);
-        Directory.CreateDirectory(_trueNegativePath);
-        if (Directory.Exists(_truePositivePath))
-            Directory.Delete(_truePositivePath, true);
-        Directory.CreateDirectory(_truePositivePath);
-        if (Directory.Exists(_noLabelPath))
-            Directory.Delete(_noLabelPath, true);
-        Directory.CreateDirectory(_noLabelPath);
-        if (Directory.Exists(_hasLabelPath))
-            Directory.Delete(_hasLabelPath, true);
-        Directory.CreateDirectory(_hasLabelPath);
     }
     [RelayCommand(CanExecute = nameof(ReadyToAnalyze), AllowConcurrentExecutions = true, IncludeCancelCommand = true)]
     private async Task AnalyzeRisks(CancellationToken token)
@@ -422,19 +280,7 @@ public partial class RiskDetectViewModel : ViewModelBase
             
             
     }
-
-    [ObservableProperty] private bool _isClassified;
-   
-    partial void OnIsClassifiedChanged(bool value)
-    {
-        OnPropertyChanged(nameof(ReadyToMarkError));
-        OnPropertyChanged(nameof(ReadyToRevokeError));
-        MarkErrorCommand.NotifyCanExecuteChanged();
-        RevokeErrorCommand.NotifyCanExecuteChanged();
-    }
     
-
-    public bool ReadyToMarkError => !IsAnalyzing && !IsClassified ;
     [RelayCommand(CanExecute = nameof(ReadyToMarkError))]
     private void MarkError(string isTruePositive)
     {
@@ -450,8 +296,7 @@ public partial class RiskDetectViewModel : ViewModelBase
         _resultClassifiedList[JpgIndex] = true;
         IsClassified = _resultClassifiedList[JpgIndex];
     }
-    public bool ReadyToRevokeError => !IsAnalyzing && IsClassified ;
-
+    
     [RelayCommand(CanExecute = nameof(ReadyToRevokeError))]
     private void RevokeError()
     {
@@ -469,10 +314,6 @@ public partial class RiskDetectViewModel : ViewModelBase
         IsClassified = _resultClassifiedList[JpgIndex];
     }
     
-    
-    public bool IsNotStart => JpgIndex != 0 && !IsAnalyzing;
-    public bool IsNotEnd => (JpgIndex + 1) != RiskDetectResults.Count && !IsAnalyzing;
-
     [RelayCommand(CanExecute = nameof(IsNotEnd))]
     private void NextJpg()
     {
@@ -499,6 +340,123 @@ public partial class RiskDetectViewModel : ViewModelBase
         
         JpgIndex -= 1;
     }
+    // private method
+    private async Task<RiskDetectResult> GetDefectLabelByTaskName(string jpg, string resultPath, string taskName, bool cropImage)
+    {
+        var fileName = Path.GetFileName(jpg);
+        await using var stream = File.OpenRead(jpg);
+        var guessedLabel = "";
+        if (taskName == nameof(EnumTaskName.自动))
+        {
+            guessedLabel = await GuessUtil.GuessLabelFromLabelFile(jpg);
+            if (guessedLabel != null)
+                taskName = GuessUtil.TryGetTaskName(guessedLabel);
+        }
+        
+        // Get Api for Response
+        
+        var httpResponse = await RequestUtil.GetDefectiveLabel(RiskDetectApi, stream, fileName, taskName);
+        var response = httpResponse.Data;
+        // Drawing if exists
+        var resultJpgPath = Path.Join(resultPath, $"{fileName}");
+        await ImageUtil.Drawing(stream, resultJpgPath, response, cropImage, ImagePath, ClassifyByStation, AddBrightness, Brightness, DrawLabel, DrawLabelScale);
+        // Path Pairs
+        _jpgPathPairs[resultJpgPath] = jpg;
+        _resultClassifiedList.Add(false);
+            
+        // UI dispatcher
+        var tempResult = ResponseConverter.FromResponse(httpResponse, jpg, guessedLabel, taskName, resultJpgPath);
+        return tempResult;
+    
+        
+    }
+    
+    private async void AutoClassify()
+    {
+        
+        try
+        {
+            Dispatcher.UIThread.Invoke(() =>
+            {
+                ImagePath = @"Z:\个人文件夹\张灵顿\manual_error";
+                CropImage = true;
+                ClassifyByStation = true;
+                SelectedTaskName = EnumTaskName.自动;
+            });
+            
+            string archivePath = Path.Join(ImagePath, "archive");
+            try
+            {
+                if (!Directory.Exists(archivePath))
+                    Directory.CreateDirectory(archivePath);
+            }
+            catch (Exception e)
+            {
+                
+            }
+            
+            foreach (var jpg in Directory.GetFiles(ImagePath))
+            {
+                try
+                {
+                    var filename = Path.GetFileName(jpg);
+                    File.Copy(jpg, Path.Join(archivePath, filename), true);
+                }
+                catch (Exception ex)
+                {
+                    
+                }
+               
+            }
+            
+            string targetPath = @"D:\新标注文件";
+            DateTime d = DateTime.Now.AddDays(-1);
+            targetPath = Path.Join(targetPath, $"裁剪{d:MMdd}");
+            if (Directory.Exists(targetPath))
+                return;
+           
+            
+            await AnalyzeRisks(new CancellationToken(false));
+            foreach (var dir in Directory.GetDirectories(ImagePath))
+            {
+                var name = Path.GetFileName(dir);
+                if (name.Contains("a"))
+                    continue;
+                CopyUtil.CopyDirectory(dir, Path.Join(targetPath, name), true);
+                Directory.Delete(dir, true);
+            }
+        }
+        catch (Exception e)
+        {
+            Log.Error("{ErrorMessage}", e.ToString());
+        }
+        
+    }
+    
+    private void CreateDirectories(string imagePath)
+    {
+        _resultPath = Path.Join(imagePath, nameof(EnumFolder.Result).ToLower());
+        _truePositivePath = Path.Join(imagePath, nameof(EnumFolder.异常));
+        _trueNegativePath = Path.Join(imagePath, nameof(EnumFolder.误检));
+        _noLabelPath = Path.Join(imagePath, nameof(EnumFolder.NoLabel));
+        _hasLabelPath = Path.Join(imagePath, nameof(EnumFolder.HasLabel));
+        if (Directory.Exists(_resultPath))
+            Directory.Delete(_resultPath, true);
+        Directory.CreateDirectory(_resultPath);
+        if (Directory.Exists(_trueNegativePath))
+            Directory.Delete(_trueNegativePath, true);
+        Directory.CreateDirectory(_trueNegativePath);
+        if (Directory.Exists(_truePositivePath))
+            Directory.Delete(_truePositivePath, true);
+        Directory.CreateDirectory(_truePositivePath);
+        if (Directory.Exists(_noLabelPath))
+            Directory.Delete(_noLabelPath, true);
+        Directory.CreateDirectory(_noLabelPath);
+        if (Directory.Exists(_hasLabelPath))
+            Directory.Delete(_hasLabelPath, true);
+        Directory.CreateDirectory(_hasLabelPath);
+    }
+    
 
     private void AutoClean()
     {
