@@ -10,6 +10,7 @@ public class ViewModelBase : ObservableObject
     protected string OcrApi;
     protected string RiskDetectApi;
     protected string DevRiskDetectApi;
+    protected int ThreadNumber;
     protected ViewModelBase()
     {
         IConfiguration configuration = new ConfigurationBuilder()
@@ -21,6 +22,7 @@ public class ViewModelBase : ObservableObject
         string ocrApi = configuration.GetSection("OcrApi").Value;
         string riskDetectApi = configuration.GetSection("RiskDetectApi").Value;
         string devUrl = configuration.GetSection("DevUrl").Value;
+        ThreadNumber = int.Parse(configuration.GetSection("Thread").Value);
         SegmentApi = baseUrl + segmentApi;
         OcrApi = baseUrl + ocrApi;
         RiskDetectApi = baseUrl + riskDetectApi;

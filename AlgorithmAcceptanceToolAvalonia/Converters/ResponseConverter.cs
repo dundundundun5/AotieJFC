@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text.Json;
@@ -15,14 +16,14 @@ namespace AlgorithmAcceptanceToolAvalonia.Converters;
 public class ResponseConverter
 {
     
-    public static RiskDetectResult FromResponse(HttpResponse<AlgorithmResponse>? httpResponse, string filePath, string? guessedLabel, string taskName)
+    public static RiskDetectResult FromResponse(HttpResponse<AlgorithmResponse>? httpResponse, string filePath, string? guessedLabel, string taskName, string resultJpgPath)
     {
         
         string temp;
         if (guessedLabel == null)
             temp = nameof(EnumLabelStatus.无标注文件);
         else if (guessedLabel == string.Empty)
-            temp = nameof(EnumLabelStatus.无目标);
+            temp = nameof(EnumLabelStatus.无);
         else
             temp = guessedLabel;
         
@@ -39,11 +40,16 @@ public class ResponseConverter
                 PredictLabel = "",
                 GuessedLabel = temp,
                 PredictScore = "",
-                Timestamp = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")
+                Timestamp = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"),
+                ResultJpgPath = resultJpgPath,
+                Description = ""
             };
         }
-        var algorithmResponse = httpResponse.Data; 
-        
+        var algorithmResponse = httpResponse.Data;
+        List<string> axisList =
+            algorithmResponse.DefectList.Select(a =>
+                $"({a.TopLeft.X},{a.TopLeft.Y},{a.BottomRight.X},{a.BottomRight.Y})").ToList();
+        var shape = $"({algorithmResponse.ImageWidth},{algorithmResponse.ImageHeight})";
         var predictLabelList = algorithmResponse.DefectList.Select(a => a.DefectType).ToList();
         var predictScoreList = algorithmResponse.DefectList.Select(a => a.DefectScore).ToList();
         
@@ -55,7 +61,10 @@ public class ResponseConverter
             PredictLabel = string.Join("-", predictLabelList),
             GuessedLabel = temp,
             PredictScore = string.Join("-", predictScoreList),
-            Timestamp = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")
+            Timestamp = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"),
+            ResultJpgPath = resultJpgPath,
+            Description = string.Join("-", axisList),
+            Shape = shape
         };
         return result;
     }

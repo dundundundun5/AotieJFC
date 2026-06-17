@@ -27,7 +27,8 @@ public partial class App : Application
         Log.Logger = new LoggerConfiguration().ReadFrom.Configuration(configuration).CreateLogger();
         Dispatcher.UIThread.UnhandledException += (s, args) =>
         {
-            Log.Error(args.Exception, " {ErrorMessage}", args.Exception.Message);
+            Log.Error(args.Exception, " {ErrorMessage}", args.Exception.ToString());
+            Console.WriteLine(args.Exception.ToString());
             args.Handled = true;
         };
 

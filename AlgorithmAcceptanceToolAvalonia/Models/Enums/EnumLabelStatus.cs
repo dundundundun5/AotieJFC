@@ -2,6 +2,6 @@
 
 public enum EnumLabelStatus
 {
-    无目标,
+    无,
     无标注文件
 }

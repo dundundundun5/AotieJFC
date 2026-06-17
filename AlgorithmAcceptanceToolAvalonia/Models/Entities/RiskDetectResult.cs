@@ -10,6 +10,8 @@ public class RiskDetectResult
     public string Description { get; set; } = string.Empty;
     public string TaskName { get; set; } = string.Empty;
     public string RawResult { get; set; } = string.Empty;
+    public string ResultJpgPath { get; set; } = string.Empty;
+    public string Shape { get; set; } = string.Empty;
 
     public RiskDetectResult()
     {

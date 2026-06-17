@@ -54,10 +54,10 @@ public partial class RiskDetectView : SukiWindow
 
     private void OnKeyDown(object? sender, KeyEventArgs e)
     {
-        if (e.Key == Key.Z)
-        {
-            var fullScreen = new FullScreenImageView(_viewModel.PresentImage);
-            fullScreen.Show(this);
-        }
+        // if (e.Key == Key.Z)
+        // {
+        //     var fullScreen = new FullScreenImageView(_viewModel.PresentImage);
+        //     fullScreen.Show(this);
+        // }
     }
 }

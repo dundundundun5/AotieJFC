@@ -7,5 +7,6 @@ public enum EnumFolder
     异常,
     误检,
     Crop,
-    NoLabel
+    NoLabel,
+    HasLabel
 }

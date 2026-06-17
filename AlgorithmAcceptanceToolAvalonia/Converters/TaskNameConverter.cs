@@ -20,7 +20,7 @@ public class TaskNameConverter
         {
             return Body;
         }
-        else if (taskName is EnumTaskName.左标志灯)
+        else if (taskName is EnumTaskName.标志灯)
         {
             return Left;
         } else if (taskName is EnumTaskName.自动)

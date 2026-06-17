@@ -6,22 +6,16 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using AlgorithmAcceptanceToolAvalonia.Converters;
-using AlgorithmAcceptanceToolAvalonia.Models;
 using AlgorithmAcceptanceToolAvalonia.Models.Entities;
 using AlgorithmAcceptanceToolAvalonia.Models.Enums;
 using AlgorithmAcceptanceToolAvalonia.Utils;
 using Avalonia.Controls.Notifications;
-using Avalonia.Input.Platform;
-using Avalonia.Interactivity;
 using Avalonia.Media.Imaging;
 using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using Flurl.Util;
 using Serilog;
 using SukiUI.Dialogs;
-using SukiUI.MessageBox;
-using Tmds.DBus.Protocol;
 
 
 namespace AlgorithmAcceptanceToolAvalonia.ViewModels;
@@ -37,18 +31,35 @@ public partial class RiskDetectViewModel : ViewModelBase
     [ObservableProperty]
     private bool _classifyByStation = false;
 
+    [ObservableProperty]
+    private bool _drawLabel = false;
+    
+    
+    
     partial void OnIsAnalyzingChanged(bool value)
     {
         OnPropertyChanged(nameof(ReadyToAnalyze));
         OnPropertyChanged(nameof(IsNotEnd));
         OnPropertyChanged(nameof(IsNotStart));
         OnPropertyChanged(nameof(ReadyToMarkError));
+        OnProgressChanged(nameof(CanPlay));
+        
+        
         AnalyzeRisksCommand.NotifyCanExecuteChanged();
         NextJpgCommand.NotifyCanExecuteChanged();
         PreviousJpgCommand.NotifyCanExecuteChanged();
         MarkErrorCommand.NotifyCanExecuteChanged();
         RevokeErrorCommand.NotifyCanExecuteChanged();
+        InitializePlayTimerCommand.NotifyCanExecuteChanged();
+        
     }
+
+    partial void OnIsPlayingChanged(bool value)
+    {
+        OnProgressChanged(nameof(CanPlay));
+        InitializePlayTimerCommand.NotifyCanExecuteChanged();
+    }
+
 
     [ObservableProperty] 
     private string _imagePath = string.Empty;
@@ -59,7 +70,7 @@ public partial class RiskDetectViewModel : ViewModelBase
     [ObservableProperty]
     private bool _autoClassifyEnabled = false;
     
-    private List<string> _resultPathList = [];
+    // private List<string> _resultPathList = [];
     private List<bool> _resultClassifiedList = [];
     partial void OnImagePathChanged(string value)
     {
@@ -74,7 +85,7 @@ public partial class RiskDetectViewModel : ViewModelBase
     
     [ObservableProperty] private Bitmap _presentImage;
 
-    [ObservableProperty] private int _jpgIndex = -1;
+    [ObservableProperty] private int _jpgIndex = 0;
 
     [ObservableProperty]
     private bool _cropImage;
@@ -82,6 +93,9 @@ public partial class RiskDetectViewModel : ViewModelBase
 
     [ObservableProperty]
     private string _progress = string.Empty;
+
+    [ObservableProperty]
+    private string _filterText = string.Empty;
     public event Action<RiskDetectResult> DataGridChanged = (result) =>
     {
 
@@ -89,14 +103,16 @@ public partial class RiskDetectViewModel : ViewModelBase
 
     partial void OnJpgIndexChanged(int oldValue, int newValue)
     {
+        if (newValue < 0 || newValue > RiskDetectResults.Count - 1)
+            return;
         
         Dispatcher.UIThread.Invoke(() =>
         {
-            PresentImage = ImageUtil.LoadFromLocalPath(_resultPathList[newValue]);
+            PresentImage = ImageUtil.LoadFromLocalPath(RiskDetectResults[newValue].ResultJpgPath);
             DataGridChanged?.Invoke(RiskDetectResults[newValue]);
         });
         IsClassified = _resultClassifiedList[newValue];
-        Progress = $" {newValue + 1} / {_resultPathList.Count}";
+        Progress = $" {newValue + 1} / {RiskDetectResults.Count}";
         OnPropertyChanged(nameof(IsNotEnd));
         OnPropertyChanged(nameof(IsNotStart));
         NextJpgCommand.NotifyCanExecuteChanged();
@@ -116,12 +132,26 @@ public partial class RiskDetectViewModel : ViewModelBase
     }
     [ObservableProperty]
     private string _logText = string.Empty;
-
+    
+    public float[] BrightnessList { get; set; }= [ 2f, 3f, 5f];
+    
+    public int[] DrawLabelScaleList { get; set; } = [2, 3, 4];
+    [ObservableProperty]
+    private int _drawLabelScale = 2;
+    [ObservableProperty]
+    private float _brightness = 2f;
+    private DispatcherTimer? _playTimer = null;
+    [ObservableProperty]
+    private bool _addBrightness = false;
     public bool ReadyToAnalyze => !string.IsNullOrEmpty(ImagePath) && !IsAnalyzing;
 
     private Dictionary<string, string> _jpgPathPairs = new();
 
     private DispatcherTimer _timer;
+
+    public List<string> FilterOptionList { get; set; }= ["包含", "不包含"];
+    [ObservableProperty]
+    private string _filterOption = "包含";
     [RelayCommand]
     private void InitializeDailyTimer()
     {
@@ -137,6 +167,32 @@ public partial class RiskDetectViewModel : ViewModelBase
         };
         _timer.Start();
         
+    }
+
+    [ObservableProperty]
+    private bool _isPlaying = false;
+    public bool CanPlay =>  !IsAnalyzing && !IsPlaying;
+    [RelayCommand(CanExecute = nameof(CanPlay))]
+    private void InitializePlayTimer()
+    {
+        if (_playTimer is null)
+        {
+            _playTimer = new DispatcherTimer();
+            _playTimer.Interval = TimeSpan.FromSeconds(1.25);
+            _playTimer.Tick += (sender, args) =>
+            {
+                if (IsNotEnd)
+                    JpgIndex += 1;
+                else
+                    _playTimer.Stop();
+                
+                
+                    
+            };
+        }
+        _playTimer.Start();
+        IsPlaying = true;
+
     }
 
     partial void OnAutoClassifyEnabledChanged(bool value)
@@ -208,31 +264,31 @@ public partial class RiskDetectViewModel : ViewModelBase
         
     }
     
-    public event Action AutoClose = () =>
-    {
-
-    };
     private async Task<RiskDetectResult> GetDefectLabelByTaskName(string jpg, string resultPath, string taskName, bool cropImage)
     {
         var fileName = Path.GetFileName(jpg);
         await using var stream = File.OpenRead(jpg);
-        var guessedLabel = await GuessUtil.GuessLabelFromLabelFile(jpg);
-        if (guessedLabel != null && taskName == nameof(EnumTaskName.自动))
-            taskName = GuessUtil.TryGetTaskName(guessedLabel);
+        var guessedLabel = "";
+        if (taskName == nameof(EnumTaskName.自动))
+        {
+            guessedLabel = await GuessUtil.GuessLabelFromLabelFile(jpg);
+            if (guessedLabel != null)
+                taskName = GuessUtil.TryGetTaskName(guessedLabel);
+        }
+        
         // Get Api for Response
         
         var httpResponse = await RequestUtil.GetDefectiveLabel(RiskDetectApi, stream, fileName, taskName);
         var response = httpResponse.Data;
         // Drawing if exists
         var resultJpgPath = Path.Join(resultPath, $"{fileName}");
-        await ImageUtil.Drawing(stream, resultJpgPath, response, cropImage, ImagePath, ClassifyByStation);
+        await ImageUtil.Drawing(stream, resultJpgPath, response, cropImage, ImagePath, ClassifyByStation, AddBrightness, Brightness, DrawLabel, DrawLabelScale);
         // Path Pairs
         _jpgPathPairs[resultJpgPath] = jpg;
-        _resultPathList.Add(resultJpgPath);
         _resultClassifiedList.Add(false);
             
         // UI dispatcher
-        var tempResult = ResponseConverter.FromResponse(httpResponse, jpg, guessedLabel, taskName);
+        var tempResult = ResponseConverter.FromResponse(httpResponse, jpg, guessedLabel, taskName, resultJpgPath);
         return tempResult;
     
         
@@ -242,15 +298,17 @@ public partial class RiskDetectViewModel : ViewModelBase
         _resultPath = string.Empty,
         _truePositivePath = string.Empty,
         _trueNegativePath = string.Empty,
-        _noLabelPath = string.Empty;
+        _noLabelPath = string.Empty,
+        _hasLabelPath = string.Empty;
 
-    private Dictionary<string, int> res = new Dictionary<string, int>();
+  
     private void CreateDirectories(string imagePath)
     {
         _resultPath = Path.Join(imagePath, nameof(EnumFolder.Result).ToLower());
         _truePositivePath = Path.Join(imagePath, nameof(EnumFolder.异常));
         _trueNegativePath = Path.Join(imagePath, nameof(EnumFolder.误检));
         _noLabelPath = Path.Join(imagePath, nameof(EnumFolder.NoLabel));
+        _hasLabelPath = Path.Join(imagePath, nameof(EnumFolder.HasLabel));
         if (Directory.Exists(_resultPath))
             Directory.Delete(_resultPath, true);
         Directory.CreateDirectory(_resultPath);
@@ -263,6 +321,9 @@ public partial class RiskDetectViewModel : ViewModelBase
         if (Directory.Exists(_noLabelPath))
             Directory.Delete(_noLabelPath, true);
         Directory.CreateDirectory(_noLabelPath);
+        if (Directory.Exists(_hasLabelPath))
+            Directory.Delete(_hasLabelPath, true);
+        Directory.CreateDirectory(_hasLabelPath);
     }
     [RelayCommand(CanExecute = nameof(ReadyToAnalyze), AllowConcurrentExecutions = true, IncludeCancelCommand = true)]
     private async Task AnalyzeRisks(CancellationToken token)
@@ -278,13 +339,24 @@ public partial class RiskDetectViewModel : ViewModelBase
             });
            
             _jpgPathPairs.Clear();
-            _resultPathList.Clear();
+            RiskDetectResults.Clear();
             _resultClassifiedList.Clear();
             
             
-            var jpgs = ImageUtil.GetAllJpgPath(ImagePath);
+            var jpgs = ImageUtil.GetAllJpgPath(ImagePath, FilterText.Trim(), FilterOption);
             if (jpgs.Count == 0)
             {
+                await Dispatcher.UIThread.InvokeAsync( () =>
+                {
+                    DialogManager
+                        .CreateDialog()
+                        .WithTitle("提示")
+                        .WithContent("符合条件的图片数量为0")
+                        .Dismiss()
+                        .ByClickingBackground()
+                        .OfType(NotificationType.Warning)
+                        .TryShow();
+                });
                 
                 return;
             }
@@ -293,7 +365,7 @@ public partial class RiskDetectViewModel : ViewModelBase
             CreateDirectories(ImagePath);
             var paralleOptions = new ParallelOptions()
             {
-                MaxDegreeOfParallelism = 4,
+                MaxDegreeOfParallelism = 8,
                 CancellationToken = token
             };
             int b = 1;
@@ -303,8 +375,6 @@ public partial class RiskDetectViewModel : ViewModelBase
                 try
                 {
                     var tempResult = await GetDefectLabelByTaskName(jpg, _resultPath, taskName, CropImage);
-                    string predictLabel = tempResult.PredictLabel;
-                    string guessLabel = tempResult.GuessedLabel;
                     
                     await Dispatcher.UIThread.InvokeAsync(() =>
                     {
@@ -340,24 +410,13 @@ public partial class RiskDetectViewModel : ViewModelBase
             {
                 IsAnalyzing = false;
                 JpgIndex = 0;
-                var cnt = RiskDetectResults.Count(r => !string.IsNullOrEmpty(r.PredictLabel));
-                string a = $"{ImagePath} ->  {cnt} / {total}";
                 OnPropertyChanged(nameof(JpgIndex));
-                DialogManager.CreateDialog()
-                    .WithContent(a)
-                    .WithTitle("检测结果")
-                    .WithOkResult("确认")
-                    .TryShow();
-                
-
             });
             
             if (CropImage)
             {
                 if (ClassifyByStation)
                     AutoClean();
-                // AutoClean();
-                // AutoClose?.Invoke();
             }
         }
             
@@ -379,7 +438,7 @@ public partial class RiskDetectViewModel : ViewModelBase
     [RelayCommand(CanExecute = nameof(ReadyToMarkError))]
     private void MarkError(string isTruePositive)
     {
-        var jpgPath = _resultPathList[JpgIndex];
+        var jpgPath = RiskDetectResults[JpgIndex].ResultJpgPath;
         var sourcePath = _jpgPathPairs[jpgPath];
         var fileName = Path.GetFileName(sourcePath);
         string targetPath;
@@ -396,7 +455,7 @@ public partial class RiskDetectViewModel : ViewModelBase
     [RelayCommand(CanExecute = nameof(ReadyToRevokeError))]
     private void RevokeError()
     {
-        var jpgPath = _resultPathList[JpgIndex];
+        var jpgPath = RiskDetectResults[JpgIndex].ResultJpgPath;
         var sourcePath = _jpgPathPairs[jpgPath];
         var fileName = Path.GetFileName(sourcePath);
         string targetPath1, targetPath2;
@@ -412,17 +471,32 @@ public partial class RiskDetectViewModel : ViewModelBase
     
     
     public bool IsNotStart => JpgIndex != 0 && !IsAnalyzing;
-    public bool IsNotEnd => (JpgIndex + 1) != _resultPathList.Count && !IsAnalyzing;
-    
+    public bool IsNotEnd => (JpgIndex + 1) != RiskDetectResults.Count && !IsAnalyzing;
+
     [RelayCommand(CanExecute = nameof(IsNotEnd))]
     private void NextJpg()
     {
+        if (_playTimer is not null)
+        {
+            _playTimer.Stop();
+            IsPlaying = false;
+        }
+            
         JpgIndex += 1;
+        
     }
 
     [RelayCommand(CanExecute = nameof(IsNotStart))]
     private void PreviousJpg()
     {
+        if (_playTimer is not null)
+        {
+            _playTimer.Stop();
+            IsPlaying = false;
+        }
+            
+            
+        
         JpgIndex -= 1;
     }
 
