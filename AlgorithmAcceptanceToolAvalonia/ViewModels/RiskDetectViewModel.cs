@@ -25,7 +25,7 @@ public partial class RiskDetectViewModel : ViewModelBase
     // community mvvm
     [ObservableProperty] private bool _isAnalyzing;
     [ObservableProperty] private bool _classifyByStation = false;
-    [ObservableProperty] private bool _drawLabel = false;
+    [ObservableProperty] private bool _drawLabel = true;
     [ObservableProperty] private string _imagePath = string.Empty;
     [ObservableProperty] private ObservableCollection<RiskDetectResult> _riskDetectResults = new ObservableCollection<RiskDetectResult>();
     [ObservableProperty] private bool _autoClassifyEnabled = false;
@@ -39,10 +39,11 @@ public partial class RiskDetectViewModel : ViewModelBase
     [ObservableProperty] private string _logText = string.Empty;
     [ObservableProperty] private int _drawLabelScale = 2;
     [ObservableProperty] private float _brightness = 2f; 
-    [ObservableProperty] private bool _addBrightness = false;
+    [ObservableProperty] private bool _addBrightness = true;
     [ObservableProperty] private bool _isPlaying = false;
     [ObservableProperty] private string _filterOption = "包含";
     [ObservableProperty] private bool _isClassified;
+    private int _total = 0;
     partial void OnIsClassifiedChanged(bool value)
     {
         OnPropertyChanged(nameof(ReadyToMarkError));
@@ -83,7 +84,7 @@ public partial class RiskDetectViewModel : ViewModelBase
 
     partial void OnJpgIndexChanged(int oldValue, int newValue)
     {
-        if (newValue < 0 || newValue > RiskDetectResults.Count - 1)
+        if (newValue < 0 || newValue > _total - 1)
             return;
         
         Dispatcher.UIThread.Invoke(() =>
@@ -91,8 +92,8 @@ public partial class RiskDetectViewModel : ViewModelBase
             PresentImage = ImageUtil.LoadFromLocalPath(RiskDetectResults[newValue].ResultJpgPath);
             DataGridChanged?.Invoke(RiskDetectResults[newValue]);
         });
-        IsClassified = _resultClassifiedList[newValue];
-        Progress = $" {newValue + 1} / {RiskDetectResults.Count}";
+        IsClassified = RiskDetectResults[newValue].IsClassified;
+        Progress = $" {newValue + 1} / {_total}";
         OnPropertyChanged(nameof(IsNotEnd));
         OnPropertyChanged(nameof(IsNotStart));
         NextJpgCommand.NotifyCanExecuteChanged();
@@ -121,12 +122,10 @@ public partial class RiskDetectViewModel : ViewModelBase
     public bool ReadyToMarkError => !IsAnalyzing && !IsClassified ;
     public bool ReadyToRevokeError => !IsAnalyzing && IsClassified;
     public bool IsNotStart => JpgIndex != 0 && !IsAnalyzing;
-    public bool IsNotEnd => (JpgIndex + 1) != RiskDetectResults.Count && !IsAnalyzing;
+    public bool IsNotEnd => (JpgIndex + 1) != _total && !IsAnalyzing;
     // public object
-    public ISukiDialogManager DialogManager { get; } = new SukiDialogManager();
+    
     // private
-    private List<bool> _resultClassifiedList = [];
-    private Dictionary<string, string> _jpgPathPairs = new();
     private DispatcherTimer? _playTimer = null;
     private DispatcherTimer _timer;
     private string
@@ -186,23 +185,24 @@ public partial class RiskDetectViewModel : ViewModelBase
     [RelayCommand(CanExecute = nameof(ReadyToAnalyze), AllowConcurrentExecutions = true, IncludeCancelCommand = true)]
     private async Task AnalyzeRisks(CancellationToken token)
     {
-        int total = 0;
+       
     
         try
         {
+            var jpgs = ImageUtil.GetAllJpgPath(ImagePath, FilterText.Trim(), FilterOption);
+            _total = jpgs.Count;
             Dispatcher.UIThread.Invoke(() =>
             {
                 IsAnalyzing = true;
                 RiskDetectResults.Clear();
             });
-           
-            _jpgPathPairs.Clear();
+            
             RiskDetectResults.Clear();
-            _resultClassifiedList.Clear();
+          
             
             
-            var jpgs = ImageUtil.GetAllJpgPath(ImagePath, FilterText.Trim(), FilterOption);
-            if (jpgs.Count == 0)
+            
+            if (_total == 0)
             {
                 await Dispatcher.UIThread.InvokeAsync( () =>
                 {
@@ -219,7 +219,7 @@ public partial class RiskDetectViewModel : ViewModelBase
                 return;
             }
 
-            total = jpgs.Count;
+           
             CreateDirectories(ImagePath);
             var paralleOptions = new ParallelOptions()
             {
@@ -239,9 +239,9 @@ public partial class RiskDetectViewModel : ViewModelBase
                         PresentImage = ImageUtil.LoadFromLocalPath(jpg);
                         RiskDetectResults.Add(tempResult);
                         OnPropertyChanged(nameof(RiskDetectResults));
-                        Progress = $"{b} / {total}";
+                        Progress = $"{b} / {_total}";
                     });
-                    b += 1;
+                    Interlocked.Increment(ref b);  
                 }
                 catch (Exception ex2)
                 {
@@ -284,8 +284,7 @@ public partial class RiskDetectViewModel : ViewModelBase
     [RelayCommand(CanExecute = nameof(ReadyToMarkError))]
     private void MarkError(string isTruePositive)
     {
-        var jpgPath = RiskDetectResults[JpgIndex].ResultJpgPath;
-        var sourcePath = _jpgPathPairs[jpgPath];
+        var sourcePath = RiskDetectResults[JpgIndex].SourceJpgPath;
         var fileName = Path.GetFileName(sourcePath);
         string targetPath;
         if (string.Equals(isTruePositive, "true"))
@@ -293,15 +292,15 @@ public partial class RiskDetectViewModel : ViewModelBase
         else
             targetPath = Path.Join(_trueNegativePath, fileName);    
         File.Copy(sourcePath, targetPath, true);
-        _resultClassifiedList[JpgIndex] = true;
-        IsClassified = _resultClassifiedList[JpgIndex];
+        RiskDetectResults[JpgIndex].IsClassified = true;
+        IsClassified = RiskDetectResults[JpgIndex].IsClassified;
     }
     
     [RelayCommand(CanExecute = nameof(ReadyToRevokeError))]
     private void RevokeError()
     {
         var jpgPath = RiskDetectResults[JpgIndex].ResultJpgPath;
-        var sourcePath = _jpgPathPairs[jpgPath];
+        var sourcePath = RiskDetectResults[JpgIndex].SourceJpgPath;
         var fileName = Path.GetFileName(sourcePath);
         string targetPath1, targetPath2;
         targetPath1 = Path.Join(_truePositivePath,fileName);
@@ -310,8 +309,8 @@ public partial class RiskDetectViewModel : ViewModelBase
             File.Delete(targetPath1);
         if (File.Exists(targetPath2))
             File.Delete(targetPath2);
-        _resultClassifiedList[JpgIndex] = false;
-        IsClassified = _resultClassifiedList[JpgIndex];
+        RiskDetectResults[JpgIndex].IsClassified = false;
+        IsClassified = RiskDetectResults[JpgIndex].IsClassified;
     }
     
     [RelayCommand(CanExecute = nameof(IsNotEnd))]
@@ -360,9 +359,6 @@ public partial class RiskDetectViewModel : ViewModelBase
         // Drawing if exists
         var resultJpgPath = Path.Join(resultPath, $"{fileName}");
         await ImageUtil.Drawing(stream, resultJpgPath, response, cropImage, ImagePath, ClassifyByStation, AddBrightness, Brightness, DrawLabel, DrawLabelScale);
-        // Path Pairs
-        _jpgPathPairs[resultJpgPath] = jpg;
-        _resultClassifiedList.Add(false);
             
         // UI dispatcher
         var tempResult = ResponseConverter.FromResponse(httpResponse, jpg, guessedLabel, taskName, resultJpgPath);
@@ -467,7 +463,8 @@ public partial class RiskDetectViewModel : ViewModelBase
             Directory.Delete(_trueNegativePath, true);
         if (Directory.Exists(_truePositivePath))
             Directory.Delete(_truePositivePath, true);
-        foreach (var jpg in _jpgPathPairs.Values.ToList())
+        var jpgs = RiskDetectResults.Select(r => r.SourceJpgPath).ToList();
+        foreach (var jpg in jpgs)
         {
             try
             {

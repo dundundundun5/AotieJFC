@@ -32,18 +32,23 @@ public static class ImageUtil
         var paths = Directory
             .GetFiles(rootPath, "*.jpg", SearchOption.TopDirectoryOnly)
             .ToList();
-        if (!string.IsNullOrEmpty(filterText))
+        var filterTexts = filterText.Split(" ");
+        foreach (var text in filterTexts)
         {
-            if (filterOption.Equals("包含"))
-                return paths
-                    .Where(p => p.Contains(filterText))
-                    .ToList();
-            if (filterOption.Equals("不包含"))
-                return paths
-                    .Where(p => !p.Contains(filterText))
-                    .ToList();
+            if (!string.IsNullOrEmpty(text))
+            {
+                if (filterOption.Equals("包含"))
+                    paths =  paths
+                        .Where(p => p.Contains(text))
+                        .ToList();
+                if (filterOption.Equals("不包含"))
+                    paths =  paths
+                        .Where(p => !p.Contains(text))
+                        .ToList();
 
-        }   
+            }   
+        }
+        
             
         return paths;
 

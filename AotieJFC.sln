@@ -15,8 +15,6 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TrainTestTool", "TrainTestT
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AlgorithmAcceptanceToolAvalonia", "AlgorithmAcceptanceToolAvalonia\AlgorithmAcceptanceToolAvalonia.csproj", "{F5944419-A97D-4C4D-85B5-46BE8172D31E}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PlotRiskDetectResults", "PlotRiskDetectResults\PlotRiskDetectResults.csproj", "{CAACC746-1D6A-4B4D-8AC5-FE5E7ECA86E5}"
-EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -47,10 +45,6 @@ Global
 		{F5944419-A97D-4C4D-85B5-46BE8172D31E}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{F5944419-A97D-4C4D-85B5-46BE8172D31E}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{F5944419-A97D-4C4D-85B5-46BE8172D31E}.Release|Any CPU.Build.0 = Release|Any CPU
-		{CAACC746-1D6A-4B4D-8AC5-FE5E7ECA86E5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{CAACC746-1D6A-4B4D-8AC5-FE5E7ECA86E5}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{CAACC746-1D6A-4B4D-8AC5-FE5E7ECA86E5}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{CAACC746-1D6A-4B4D-8AC5-FE5E7ECA86E5}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

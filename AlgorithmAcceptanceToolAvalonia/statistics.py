@@ -3,14 +3,14 @@ import pandas as pd
 import random
 import locale
 def do_task(day, version):
-    date = "2026_" + day
-    image_path = r"Z:\个人文件夹\张灵顿\manual_error\archive"
+    date = "2026_07_05"
+    image_path = r"Z:\个人文件夹\张灵顿\manual_error"
     error_path = r"Z:\个人文件夹\张灵顿\异常"
     txt_path = r"Z:\个人文件夹\张灵顿"
     result_path = r"d:\Download"
     rows = pd.read_csv(os.path.join(txt_path, f"{date}.txt"), sep=",", header=None).to_numpy().tolist()
     results = []
-    for prefix in ["客户端", "二级分数"]:
+    for prefix in ["客户端"]:
         cols = [
             version ,
             "篷布飘起",
@@ -55,16 +55,16 @@ def do_task(day, version):
                 "ZJ": 0,
                 "车厢数": 0,
                 "车次数": 0,
-                "误报率": "0.00%",
-                "告警准确率": "0.00%",
+                "误报率": "无",
+                "告警准确率": "无",
                 "正确告警数": 0,
                 "告警总数": 0,
             }
             header = list(res.keys())
             res[version] = row[0]
             
-            res["车次数"] = row[-3]
-            res["车厢数"] = row[-2]
+            # res["车次数"] = row[-3]
+            # res["车厢数"] = row[-2]
        
         
             total = 0
@@ -111,13 +111,7 @@ def do_task(day, version):
         
             
             res["正确告警数"] = error
-            false_alarm = int(res["告警总数"]) - error
-            try:
-                
-                res["告警准确率"] = str(round(error / int(res["告警总数"]) * 100.0, 2)) + "%"
-            except ZeroDivisionError:
-                res["告警准确率"] = "无"
-            res["误报率"] = str(round(false_alarm / int(row[-2]) * 100.0, 2)) + "%"
+    
             res["BT"] = f"[{res["BT"]}]"
 
             temp_list.append(list(res.values()))
@@ -150,9 +144,9 @@ def do_task(day, version):
     
 if __name__ == "__main__":
     days = [
-        "04_16",
-        "04_15"
+        "07_05",
+        "07_04"
     ]
-    version = "dev.016-Beta"
+    version = "dev.019-Beta"
     for day in days:
         do_task(day=day, version=version)

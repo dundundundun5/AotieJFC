@@ -140,10 +140,12 @@
                 VerticalAlignment="Center"
                 Width="120" />
             <TextBox
+                AcceptsReturn="False"
                 HorizontalAlignment="Center"
                 Text="{Binding FilterText}"
                 VerticalAlignment="Center"
-                Width="150" />
+                Watermark="填入字符串(多个按空格分隔)"
+                Width="240" />
         </StackPanel>
 
         <StackPanel

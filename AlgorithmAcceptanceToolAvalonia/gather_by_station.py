@@ -29,7 +29,7 @@ def do_task(day):
     temp.to_csv(os.path.join(result_path, f"{dt}.txt"), index=False, header=False)
 
 if __name__ == "__main__":
-    days = ["0416", "0415"]
+    days = ["0617", "0616"]
     for day in days:
         do_task(day=day)
     

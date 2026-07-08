@@ -11,6 +11,8 @@ public class RiskDetectResult
     public string TaskName { get; set; } = string.Empty;
     public string RawResult { get; set; } = string.Empty;
     public string ResultJpgPath { get; set; } = string.Empty;
+    public bool IsClassified { get; set; } = false;
+    public string SourceJpgPath { get; set; } = string.Empty;
     public string Shape { get; set; } = string.Empty;
 
     public RiskDetectResult()

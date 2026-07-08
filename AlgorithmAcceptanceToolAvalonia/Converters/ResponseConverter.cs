@@ -42,6 +42,8 @@ public class ResponseConverter
                 PredictScore = "",
                 Timestamp = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"),
                 ResultJpgPath = resultJpgPath,
+                SourceJpgPath = filePath,
+                IsClassified = false,
                 Description = ""
             };
         }
@@ -63,6 +65,8 @@ public class ResponseConverter
             PredictScore = string.Join("-", predictScoreList),
             Timestamp = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"),
             ResultJpgPath = resultJpgPath,
+            SourceJpgPath = filePath,
+            IsClassified = false,
             Description = string.Join("-", axisList),
             Shape = shape
         };
