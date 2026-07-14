@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Net;
 using System.Text;
+using Serilog;
 
 namespace TrainTestTool.Models; 
 class SimpleFtpClient {
@@ -23,8 +24,9 @@ class SimpleFtpClient {
             //Console.WriteLine($"文件 {localFilePath} 上传到 {remoteFilePath} 成功");
             return true;
         }
-        catch (WebException ex) {
-            //Console.WriteLine($"上传文件失败: {ex.Message}");
+        catch (WebException ex)
+        {
+            Log.Error("上传文件失败: {}", ex.Message);
             return false;
         }
     }
@@ -36,7 +38,7 @@ class SimpleFtpClient {
             Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
             client.Encoding = Encoding.GetEncoding("GBK"); // 设置编码为GBK
             client.DownloadFile(uri, localFilePath);
-            //Console.WriteLine($"文件 {remoteFilePath} 下载到 {localFilePath} 成功");
+            Log.Information("文件 {} 下载到 {} 成功", remoteFilePath, localFilePath);
             return true;
         }
         catch (WebException ex) {

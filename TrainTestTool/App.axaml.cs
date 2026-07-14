@@ -4,6 +4,7 @@ using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Data.Core;
 using Avalonia.Data.Core.Plugins;
 using System.Linq;
+using System.Threading.Tasks;
 using Avalonia.Markup.Xaml;
 using Avalonia.Threading;
 using Microsoft.Extensions.Configuration;
@@ -26,9 +27,24 @@ public partial class App : Application
             .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
             .Build();
         Log.Logger = new LoggerConfiguration().ReadFrom.Configuration(configuration).CreateLogger();
+        AppDomain.CurrentDomain.UnhandledException += (s, e) =>
+        {
+            var ex = e.ExceptionObject as Exception;
+            Log.Error(ex, "AppDomain 未处理异常: {ErrorMessage}", ex?.Message);
+            // 注意：e.IsTerminating 表示应用即将崩溃
+        };
+
+        // 2. Task 未观察到的异常
+        TaskScheduler.UnobservedTaskException += (s, e) =>
+        {
+            Log.Error(e.Exception, "Task 未观察异常: {ErrorMessage}", e.Exception.Message);
+            e.SetObserved();  // 标记为已处理，避免应用崩溃
+        };
+
+        // 3. UI 线程异常（你已经有）
         Dispatcher.UIThread.UnhandledException += (s, args) =>
         {
-            Log.Error(args.Exception, " {ErrorMessage}", args.Exception.Message);
+            Log.Error(args.Exception, "UI 线程异常: {ErrorMessage}", args.Exception.Message);
             args.Handled = true;
         };
     }

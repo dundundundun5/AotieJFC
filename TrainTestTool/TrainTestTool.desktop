@@ -1,0 +1,8 @@
+[Desktop Entry]
+Name=TrainTestTool
+Comment=JFC Test
+Exec=dotnet /ftp/TrainTestTool/TrainTestTool.dll
+Icon=/ftp/TrainTestTool/train.png
+Terminal=false
+Type=Application
+Categories=Utility;

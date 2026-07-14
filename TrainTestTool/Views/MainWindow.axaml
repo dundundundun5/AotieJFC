@@ -1,7 +1,8 @@
 <Window
-    Height="630"
+    CanResize="False"
+    Height="580"
     Title="JFC测试"
-    Width="780"
+    Width="800"
     mc:Ignorable="d"
     x:Class="TrainTestTool.Views.MainWindow"
     x:DataType="viewModels:MainWindowViewModel"
@@ -50,6 +51,7 @@
                 SelectedItem="{Binding PresentTrainType}"
                 Width="150" />
             <Button
+                Command="{Binding GatherLongImagesCommand}"
                 Content="汇总长图"
                 Height="50"
                 HorizontalAlignment="Left"
@@ -58,9 +60,9 @@
                 Margin="5"
                 VerticalAlignment="Top"
                 VerticalContentAlignment="Center"
-                Width="150"
-                x:Name="gatherLongButton" />
+                Width="150" />
             <Button
+                Command="{Binding GatherLongImageOnlyLocomotiveCommand}"
                 Content="汇总车头长图"
                 Height="50"
                 HorizontalAlignment="Left"
@@ -71,6 +73,7 @@
                 VerticalContentAlignment="Center"
                 Width="150" />
             <Button
+                Command="{Binding GatherRearImagesCommand}"
                 Content="汇总车尾长图"
                 Height="50"
                 HorizontalAlignment="Left"
@@ -82,12 +85,13 @@
                 Width="150"
                 x:Name="GatherRearButton" />
             <ComboBox
-                IsEnabled="False"
+                IsEnabled="True"
                 ItemsSource="{Binding GapList}"
                 Margin="5"
                 SelectedItem="{Binding PresentGap}"
                 Width="150" />
             <Button
+                Command="{Binding PickShortImagesCommand}"
                 Height="50"
                 HorizontalContentAlignment="Center"
                 Margin="5"
@@ -96,6 +100,7 @@
                 <TextBlock Text="保留长图并获取短图" TextWrapping="Wrap" />
             </Button>
             <Button
+                Command="{Binding FtpUploadShortSoftwareImageCommand}"
                 Height="50"
                 HorizontalContentAlignment="Center"
                 IsEnabled="True"
@@ -105,37 +110,35 @@
                 <TextBlock Text="FTP上传软件错误短图" TextWrapping="Wrap" />
             </Button>
             <Button
+                Command="{Binding GatherWarningNUploadCommand}"
+                CommandParameter="false"
                 Height="50"
                 HorizontalContentAlignment="Center"
                 Margin="5"
                 VerticalContentAlignment="Center"
                 Width="150">
-                <TextBlock Text="汇总告警并上传" TextWrapping="Wrap" />
+                <TextBlock Text="汇总告警并上传(每天8点定时)" TextWrapping="Wrap" />
             </Button>
-            <Button
-                Background="Chartreuse"
-                Content="清理无关文件"
-                Height="50"
-                HorizontalContentAlignment="Center"
-                Margin="5"
-                VerticalAlignment="Top"
-                VerticalContentAlignment="Center"
-                Width="150" />
         </StackPanel>
-
-        <TextBox
-            AcceptsReturn="True"
-            AcceptsTab="True"
-            Background="White"
-            FontFamily="Consolas"
-            FontSize="14"
-            Foreground="Black"
+        <ScrollViewer
             Grid.Column="1"
-            IsReadOnly="True"
-            Margin="5"
-            TextWrapping="NoWrap"
-            Width="600"
-            x:Name="LogTextBox" />
+            MaxHeight="800"
+            VerticalScrollBarVisibility="Auto"
+            x:Name="LogScrollViewer">
+            <TextBox
+                AcceptsReturn="True"
+                AcceptsTab="True"
+                Background="White"
+                FontFamily="Consolas"
+                FontSize="14"
+                Foreground="Black"
+                IsReadOnly="True"
+                Margin="5"
+                Text="{Binding Output}"
+                TextWrapping="Wrap"
+                Width="600"
+                x:Name="LogTextBox" />
+        </ScrollViewer>
 
     </Grid>
 
